@@ -6,7 +6,6 @@ This repository functions as the current codebase for investigating the whole ti
 
 * High energy electromagnetic showers
 * Sync pulses being generated at 1 Hz
-* ...
 
 To run the driver code of the investigation:
 
