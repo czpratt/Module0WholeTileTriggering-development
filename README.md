@@ -15,11 +15,10 @@ To run the driver code of the investigation:
 
 ### Current Project Roadmap ###
 
-- [] Implement a suite of selection algorithms to tag interesting events
+- [X] Implement a suite of selection algorithms to tag interesting events
     - [X] Look for events with 'nhit' > threshold for a given tile
     - [X] Find pulses within interesting events, generate useful statistics
     - [X] use scipy.spatial.ConvexHull to find the pulse area
-    - [] ...
 
 - [] Determine the origin of the whole tile triggering problem
     - [] Is there a spatial/temporal pattern to these hits?
@@ -35,10 +34,10 @@ To run the driver code of the investigation:
 ### Upcoming implementations ###
 
 * Refinement of parameter values for
--   1. threshold for number of hits per tile per event
--   2. maximum pulse width with respect to 'sliding' charge window
+    1. threshold for number of hits per tile per event
+    2. maximum pulse width with respect to 'sliding' charge window
 * More plotting utilities (3D functionality, etc)
-
+* Implementing more indicators for whole tile triggering identification
 
 ### Active Contributers ###
 
