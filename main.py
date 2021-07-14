@@ -21,9 +21,6 @@ from selection import Selection
 from configuration import Configuration
 
 if __name__ == '__main__':
-    '''
-        Main init function
-    '''
     parser = argparse.ArgumentParser(description='output event information')
     parser.add_argument('--datalog_file',
                         metavar='FILE',
