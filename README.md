@@ -34,9 +34,11 @@ To run the driver code of the investigation:
 
 ### Upcoming implementations ###
 
-* Convex hull / area computations 
-* Refinement of whole\_tile\_triggering algorithm
+* Refinement of parameter values for
+-   1. threshold for number of hits per tile per event
+-   2. maximum pulse width with respect to 'sliding' charge window
 * More plotting utilities (3D functionality, etc)
+
 
 ### Active Contributers ###
 
