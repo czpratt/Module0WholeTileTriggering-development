@@ -18,7 +18,9 @@ from dataclasses import dataclass
 
 from tile_plot import *
 from selection import Selection
+from pulse_finder import PulseFinder
 from configuration import Configuration
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='output event information')
@@ -32,7 +34,7 @@ if __name__ == '__main__':
                         type=str,
                         help='yaml file specifying the geometry')
 
-    parser.add_argument('--nhit_cut',
+    parser.add_argument('--nhits_cut',
                         metavar='NHITS CUT',
                         type=int,
                         default=None,
@@ -41,10 +43,21 @@ if __name__ == '__main__':
     args  = parser.parse_args()
     
     ''' Obtain selected datalog file information '''
-    selection = Selection(args.datalog_file, args.geometry_file, args.nhit_cut)
+    selection = Selection(args.datalog_file, 
+                          args.geometry_file, 
+                          args.nhits_cut)
     
-    if args.nhit_cut:
-        print('all nhit cut events: {}'.format(selection.get_nhit_cut_events()))
+    if args.nhits_cut:
+        print('all nhit cut events: {}'.format(selection))
      
-    ''' Obtain pulses from events '''
+    ''' Obtain pulses from cut events '''
+    time_step        = 1
+    q_thresh         = float(900)
+    max_q_window_len = 5
+    pulse_finder = PulseFinder(time_step,
+                               q_thresh, 
+                               max_q_window_len,
+                               args.datalog_file, 
+                               args.geometry_file)
 
+    pulse_finder.find_pulses(selection)
