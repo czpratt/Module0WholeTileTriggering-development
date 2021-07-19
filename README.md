@@ -45,11 +45,12 @@ To run the driver code of the investigation:
 
 - `selection.py`: Obtains information from a passed datalog file
   If a cut on the number of hits per tile per event is activated, a dictionary is returned that is formatted as:
-  `{evid_1: {tile_id_1: nhits_1, tile_id_2: nhits_2, ...},
-   evid_2: {tile_id_1: nhits_1, ...}
-   ...
-   }`
-
+  ```
+    {evid_1: {tile_id_1: nhits_1, tile_id_2: nhits_2, ...},
+     evid_2: {tile_id_1: nhits_1, ...}
+     ...
+    }
+    ```
 - `pulse_finder.py`: Finds pulses within events once nhit cut is made from the dictionary obtained by `selection.py`, the pulse finding algorithm attempts to find pulses based on the amount of charge deposited on a tile for a given time slot.
 
 - `tile_plot.py`: Plotting functionality
