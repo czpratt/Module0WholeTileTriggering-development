@@ -45,7 +45,7 @@ To run the driver code of the investigation:
 
 - `selection.py`: Obtains information from a passed datalog file
   If a cut on the number of hits per tile per event is activated, a dictionary is returned that is formatted as:
-  `{evid_1: {tile_id_1: nhits_1, tile_id_2: nhits_2, ...}
+  `{evid_1: {tile_id_1: nhits_1, tile_id_2: nhits_2, ...},
    evid_2: {tile_id_1: nhits_1, ...}
    ...
    }`
