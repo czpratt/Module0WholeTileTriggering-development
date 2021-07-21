@@ -5,7 +5,6 @@ from selection import Selection
 from collections import deque
 from dataclasses import dataclass
 
-
 @dataclass
 class Pulse:
 	''' Individual pulse creation '''
@@ -61,6 +60,7 @@ class EventChargeWindows:
         self.window_pulse_start_16 = None
         
         self.all_windows = None
+        self.all_pulse_indicators = None
         self.startup()
 
     
@@ -145,24 +145,17 @@ class EventChargeWindows:
             Appending charges to windows
             - if there's a tile_id match, append q
             - else append 0
+            tile_count := counter iterating through all tiles
         '''
-        self.window_1.append(q) if tile_id == 1 else self.window_1.append(0)
-        self.window_2.append(q) if tile_id == 2 else self.window_2.append(0)
-        self.window_3.append(q) if tile_id == 3 else self.window_3.append(0)
-        self.window_4.append(q) if tile_id == 4 else self.window_4.append(0)
-        self.window_5.append(q) if tile_id == 5 else self.window_5.append(0)
-        self.window_6.append(q) if tile_id == 6 else self.window_6.append(0)
-        self.window_7.append(q) if tile_id == 7 else self.window_7.append(0)
-        self.window_8.append(q) if tile_id == 8 else self.window_8.append(0)
-        self.window_9.append(q) if tile_id == 9 else self.window_9.append(0)
-        self.window_10.append(q) if tile_id == 10 else self.window_10.append(0)
-        self.window_11.append(q) if tile_id == 11 else self.window_11.append(0)
-        self.window_12.append(q) if tile_id == 12 else self.window_12.append(0)
-        self.window_13.append(q) if tile_id == 13 else self.window_13.append(0)
-        self.window_14.append(q) if tile_id == 14 else self.window_14.append(0)
-        self.window_15.append(q) if tile_id == 15 else self.window_15.append(0)
-        self.window_16.append(q) if tile_id == 16 else self.window_16.append(0)
-
+        tile_count = 1 # iterates through all tiles
+        for window in self.all_windows:
+            if tile_count == tile_id:
+                window.append(q)
+            else:
+                window.append(0)
+            
+            tile_count += 1
+    
         
     def set_pulse_start(self,
                         tile_id,
@@ -294,21 +287,24 @@ class PulseFinder:
                                 q_window,
                                 q_thresh,
                                 eqw,
-                                tile_id,
-                                event_pulse):
+                                tile_id):
 
         ''' Inspect individual tile to see if a pulse was found '''
         if sum(q_window) > q_thresh and pulse_start == False:
             # a new pulse was found, 
             # store as an event pulse
-            print('pulse beginning found at tile {}'.format(tile_id))
+            print('pulse beginning found at tile {}\n'.format(tile_id))
             eqw.set_pulse_start(tile_id, True)
+          
+            # hit id, timestamp, sum(charge window)
+            #individual_pulses[tile_id] = []
+            #print(eqw)
 
 
         elif sum(q_window) > q_thresh and pulse_start == True:
             print('pulse continuation at tile {}'.format(tile_id))
 
-        elif sum (q_window) < q_thresh and pulse_start == True:
+        elif sum(q_window) < q_thresh and pulse_start == True:
             print('pulse end at tile {}'.format(tile_id))
             eqw.set_pulse_start(tile_id, False)
             print(eqw)
@@ -320,9 +316,13 @@ class PulseFinder:
 
 
     def make_pulse_determination(self, 
-                                 eqw):
+                                 eqw,
+                                 candidate_pulses):
 
-        ''' Determine if a pulse was found at every charge window'''
+        ''' 
+        Determine if a pulse was found at every charge window 
+        --> generalize eventually
+        '''
         self.inspect_tile_for_pulses(eqw.pulse_start_1, eqw.window_1, self.q_thresh, eqw, 1) 
         self.inspect_tile_for_pulses(eqw.pulse_start_2, eqw.window_2, self.q_thresh, eqw, 2) 
         self.inspect_tile_for_pulses(eqw.pulse_start_3, eqw.window_3, self.q_thresh, eqw, 3) 
@@ -340,7 +340,6 @@ class PulseFinder:
         self.inspect_tile_for_pulses(eqw.pulse_start_15, eqw.window_15, self.q_thresh, eqw, 15) 
         self.inspect_tile_for_pulses(eqw.pulse_start_16, eqw.window_16, self.q_thresh, eqw, 16) 
 
-
     def obtain_event_pulses(self,
                             selection,
                             tiles_and_hits):
@@ -353,6 +352,7 @@ class PulseFinder:
         
         hit_count = self.hit_count
 
+        candidate_pulses = []
         while ts < self.event_end_time:
                 
             # validate length of charge windows
@@ -366,7 +366,8 @@ class PulseFinder:
                                                self.event_hits[hit_count][4]) 
                 
                 # determine whether there was a pulse at each tile
-                self.make_pulse_determination(event_q_windows)
+                self.make_pulse_determination(event_q_windows, 
+                                              candidate_pulses)
 
                 hit_count += 1
 
