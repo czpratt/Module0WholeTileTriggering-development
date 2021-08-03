@@ -4,22 +4,26 @@
 from selection import Selection
 from collections import deque
 from dataclasses import dataclass
+from scipy.spatial import ConvexHull
+import numpy as np
 
 @dataclass
 class Pulse:
-	''' Individual pulse creation '''
-	tile_id: int
-	hit_at_start_time: int
-	hit_at_end_time: int
-	pulse_start_time: int
-	pulse_end_time: int
-	delta_t: int
-	total_q: float
-	peak_q: float
-	peak_q_hit_id: int
-	peak_q_hit_time: int
-	peak_q_hit_x: float
-	peak_q_hit_y: float
+    ''' Individual pulse creation '''
+    tile_id: int
+    event_id: int
+    hit_at_start_time: int
+    hit_at_end_time: int
+    pulse_start_time: int
+    pulse_end_time: int
+    delta_t: int
+    total_q: float
+    peak_q: float
+    peak_q_hit_id: int
+    peak_q_hit_time: int
+    peak_q_hit_x: float
+    peak_q_hit_y: float
+    pulse_area: float
 
 
 class EventChargeWindows:
@@ -222,27 +226,18 @@ class PulseFinder:
         self.event                = None    # individual event
         self.hit_ref              = None    # intermediate step
         self.event_hits           = None    # all hits within event
-        self.individual_pulses = {}         # dictionary storing event's pulses
-    
-    def reinitialize_stored_pulses(self):
-        self.individual_pulses = {}
+        self.candidate_pulses     = None    # candidate pulse storage
+        self.all_pulses           = []
 
     def create_pulse(self, 
-                     tpc_indicator,
                      tile_id, 
                      event_id,
                      event_pulse_array):
         '''
-            creates Pulse class instance with PulseFinder information
-            --> see Pulse class for variable descriptions
-            Must feed in a list of event pulse info in event_pulse_array
-                event_pulse_array 
-                [
-                    tile id,
-                    hit_id,
-                    timestamp,
-                    sum of charge in window,
-                ]
+            creates Pulse instance with PulseFinder information
+            --> see Pulse dataclass for variable descriptions
+            event_pulse_array contains: 
+            [tile id, hit_id, timestamp, sum of charge in window]
         '''
         hit_start_time   = event_pulse_array[0][1]
         hit_end_time     = event_pulse_array[-1][1]
@@ -263,8 +258,7 @@ class PulseFinder:
         hit_positions    = [[hit[1], hit[2]] for hit in self.event_hits]
         pulse_area       = ConvexHull(hit_positions).volume
         
-        pulse = Pulse(tpc_indicator,
-                      tile_id,  
+        pulse = Pulse(tile_id,  
                       event_id,
                       hit_start_time, 
                       hit_end_time, 
@@ -279,7 +273,7 @@ class PulseFinder:
                       peak_q_hit_y, 
                       pulse_area)
 
-        return pulse
+        self.all_pulses.append(pulse)
 
 
     def inspect_tile_for_pulses(self,
@@ -287,58 +281,67 @@ class PulseFinder:
                                 q_window,
                                 q_thresh,
                                 eqw,
-                                tile_id):
-
+                                tile_id,
+                                hc):
         ''' Inspect individual tile to see if a pulse was found '''
         if sum(q_window) > q_thresh and pulse_start == False:
             # a new pulse was found, 
             # store as an event pulse
-            print('pulse beginning found at tile {}\n'.format(tile_id))
+            print('candidate pulse start found at tile {}'.format(tile_id))
             eqw.set_pulse_start(tile_id, True)
-          
-            # hit id, timestamp, sum(charge window)
-            #individual_pulses[tile_id] = []
-            #print(eqw)
-
+            self.candidate_pulses[tile_id] = [[tile_id, self.event_hits[hc][0], self.event_hits[hc][3], sum(q_window)]]
 
         elif sum(q_window) > q_thresh and pulse_start == True:
-            print('pulse continuation at tile {}'.format(tile_id))
+            self.candidate_pulses[tile_id].append([tile_id, self.event_hits[hc][0], self.event_hits[hc][3], sum(q_window)])
 
         elif sum(q_window) < q_thresh and pulse_start == True:
-            print('pulse end at tile {}'.format(tile_id))
+            print('candidate pulse end found at tile {}'.format(tile_id))
             eqw.set_pulse_start(tile_id, False)
-            print(eqw)
+            self.create_pulse(tile_id, self.event[0], self.candidate_pulses[tile_id]) 
+        
+            try:
+                del self.candidate_pulses[tile_id]
+            except:
+                print('CANDIDATE PULSE NOT FOUND')
+
 
         else:
-            # no pulse was found
+            # no pulse was found, do nothing
             pass
 
 
 
     def make_pulse_determination(self, 
                                  eqw,
-                                 candidate_pulses):
+                                 hc):
 
         ''' 
         Determine if a pulse was found at every charge window 
-        --> generalize eventually
+        * currently set up this way so class variables update accordingly
+        * variables are passed this way so they are changed correctly
+        - eqw = event charge window
+        - hc  = hit count
         '''
-        self.inspect_tile_for_pulses(eqw.pulse_start_1, eqw.window_1, self.q_thresh, eqw, 1) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_2, eqw.window_2, self.q_thresh, eqw, 2) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_3, eqw.window_3, self.q_thresh, eqw, 3) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_4, eqw.window_4, self.q_thresh, eqw, 4) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_5, eqw.window_5, self.q_thresh, eqw, 5) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_6, eqw.window_6, self.q_thresh, eqw, 6) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_7, eqw.window_7, self.q_thresh, eqw, 7) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_8, eqw.window_8, self.q_thresh, eqw, 8) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_9, eqw.window_9, self.q_thresh, eqw, 9) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_10, eqw.window_10, self.q_thresh, eqw, 10) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_11, eqw.window_11, self.q_thresh, eqw, 11) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_12, eqw.window_12, self.q_thresh, eqw, 12) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_13, eqw.window_13, self.q_thresh, eqw, 13) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_14, eqw.window_14, self.q_thresh, eqw, 14) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_15, eqw.window_15, self.q_thresh, eqw, 15) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_16, eqw.window_16, self.q_thresh, eqw, 16) 
+        self.inspect_tile_for_pulses(eqw.pulse_start_1, eqw.window_1, self.q_thresh, eqw, 1, hc) 
+        self.inspect_tile_for_pulses(eqw.pulse_start_2, eqw.window_2, self.q_thresh, eqw, 2, hc) 
+        self.inspect_tile_for_pulses(eqw.pulse_start_3, eqw.window_3, self.q_thresh, eqw, 3, hc) 
+        self.inspect_tile_for_pulses(eqw.pulse_start_4, eqw.window_4, self.q_thresh, eqw, 4, hc) 
+        self.inspect_tile_for_pulses(eqw.pulse_start_5, eqw.window_5, self.q_thresh, eqw, 5, hc) 
+        self.inspect_tile_for_pulses(eqw.pulse_start_6, eqw.window_6, self.q_thresh, eqw, 6, hc) 
+        self.inspect_tile_for_pulses(eqw.pulse_start_7, eqw.window_7, self.q_thresh, eqw, 7, hc) 
+        self.inspect_tile_for_pulses(eqw.pulse_start_8, eqw.window_8, self.q_thresh, eqw, 8, hc) 
+        self.inspect_tile_for_pulses(eqw.pulse_start_9, eqw.window_9, self.q_thresh, eqw, 9, hc) 
+        self.inspect_tile_for_pulses(eqw.pulse_start_10, eqw.window_10, self.q_thresh, eqw, 10, hc) 
+        self.inspect_tile_for_pulses(eqw.pulse_start_11, eqw.window_11, self.q_thresh, eqw, 11, hc) 
+        self.inspect_tile_for_pulses(eqw.pulse_start_12, eqw.window_12, self.q_thresh, eqw, 12, hc) 
+        self.inspect_tile_for_pulses(eqw.pulse_start_13, eqw.window_13, self.q_thresh, eqw, 13, hc) 
+        self.inspect_tile_for_pulses(eqw.pulse_start_14, eqw.window_14, self.q_thresh, eqw, 14, hc) 
+        self.inspect_tile_for_pulses(eqw.pulse_start_15, eqw.window_15, self.q_thresh, eqw, 15, hc) 
+        self.inspect_tile_for_pulses(eqw.pulse_start_16, eqw.window_16, self.q_thresh, eqw, 16, hc) 
+
+
+    def initialize_candidate_pulses(self):
+        self.candidate_pulses = {}
 
     def obtain_event_pulses(self,
                             selection,
@@ -348,11 +351,9 @@ class PulseFinder:
         self.event_end_time   = self.event_hits[-1][3]
         ts                    = self.event_start_time
         event_q_windows       = EventChargeWindows()
-        self.reinitialize_stored_pulses()
-        
         hit_count = self.hit_count
-
-        candidate_pulses = []
+        self.initialize_candidate_pulses()
+        
         while ts < self.event_end_time:
                 
             # validate length of charge windows
@@ -367,8 +368,9 @@ class PulseFinder:
                 
                 # determine whether there was a pulse at each tile
                 self.make_pulse_determination(event_q_windows, 
-                                              candidate_pulses)
+                                              hit_count)
 
+                # append hit count since a hit was found
                 hit_count += 1
 
             else:
@@ -380,8 +382,10 @@ class PulseFinder:
         ''' Drives pulse finding '''
         cut_events = selection.get_cut_events()
         for evid in cut_events.keys():
-            print('evid: {}'.format(evid))
+            print('evaluating event {}'.format(evid))
             self.event      = selection.get_event(evid)
             self.event_hits = selection.get_event_hits(self.event)
             tiles_and_hits  = cut_events[evid]
             event_pulses    = self.obtain_event_pulses(selection, tiles_and_hits)
+
+        print('all_pulses: {}'.format(self.all_pulses))
