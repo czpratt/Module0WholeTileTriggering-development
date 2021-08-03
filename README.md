@@ -37,19 +37,28 @@ To run the driver code of the investigation:
     2. maximum pulse width with respect to 'sliding' charge window
 * More plotting utilities (3D functionality, etc)
 * Implementing more indicators for whole tile triggering identification
+* More documentation
+
+### File documentation ###
+
+- `configuration.py`: Handles tile layout information directly from passed `.yaml` file 
+
+- `selection.py`: Obtains information from a passed datalog file
+  If a cut on the number of hits per tile per event is activated, a dictionary is returned that is formatted as:
+  ```
+    {evid_1: {tile_id_1: nhits_1, tile_id_2: nhits_2, ...},
+     evid_2: {tile_id_1: nhits_1, ...}
+     ...
+    }
+    ```
+- `pulse_finder.py`: Finds pulses within events once nhit cut is made from the dictionary obtained by `selection.py`, the pulse finding algorithm attempts to find pulses based on the amount of charge deposited on a tile for a given time slot.
+
+- `tile_plot.py`: Plotting functionality
+
+- `main.py`: Main driver function 
 
 ### Active Contributers ###
 
 * Nicholas Carrara, Postdoctoral Researcher, UC Davis
 * Christian Pratt, Graduate Student, UC Davis
 * Jacob Steenis, Graduate Student, UC Davis
-
-### File documentation ###
-
-- `selection.py`: Obtains information from a passed datalog file
-
-- `configuration.py`: Handles tile layout information directly from passed `.yaml` file 
-
-- `tile_plot.py`: Plotting functionality
-
-- `main.py`: Main driver function 

@@ -1,6 +1,7 @@
 import time
 import yaml
 import h5py as h
+
 from configuration import Configuration
 
 class Selection:
@@ -48,6 +49,9 @@ class Selection:
         else:
             pass
 
+    def __repr__(self):
+        return ('nhit cut events: {}'.format(self.nhit_cut_events))
+
 
     def make_event_nhit_cut(self, 
                             evid: int):
@@ -90,8 +94,8 @@ class Selection:
             Driver function making cuts on all events in a datalog file
         '''
         
-        iter_start = 0
-        #iter_end = len(self.events) # toggle if necessary
+        iter_start = 1
+        #iter_end = len(self.events) # toggle when necessary
         iter_end = 100
         for event in range(iter_start, iter_end, 1):
             self.make_event_nhit_cut(event)
@@ -126,6 +130,6 @@ class Selection:
         ''' Fetches total number of events '''
         return self.events[-1][0]
 
-    def get_nhit_cut_events(self):
+    def get_cut_events(self):
         ''' Fetches nhit cut events'''
         return self.nhit_cut_events
