@@ -1,5 +1,12 @@
 '''
-    Revising whole_tile_triggering
+    Addressing the Whole Tile Triggering problem occuring in the
+    Module 0 detector at LBNL
+
+    o--- Contributers ---o
+     Christian Pratt: czpratt@ucdavis.edu
+     Nicholas Carrara: ncarrara.physics@gmail.com
+     Jacob Steenis: jhsteenis@ucdavis.edu
+    o--------------------o
 '''
 
 import h5py as h
@@ -47,7 +54,7 @@ if __name__ == '__main__':
     if args.nhits_cut:
         print(selection)
      
-    ''' Obtain pulses from cut events '''
+    ''' Obtain pulses from nhit cut events '''
     time_step        = 1
     q_thresh         = float(1000)
     max_q_window_len = 5

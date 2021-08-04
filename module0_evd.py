@@ -1,3 +1,6 @@
+'''
+    Module 0 Event Display: All credit goes to LBNL scientists.
+'''
 import sys
 import numpy as np
 import fire
