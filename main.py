@@ -5,17 +5,14 @@
 import h5py as h
 import numpy as np
 import matplotlib.pyplot as plt
-
 import time
 import yaml
 import argparse
 import matplotlib
-
 from typing import Tuple, List
 from scipy.spatial import ConvexHull
 from collections import deque
 from dataclasses import dataclass
-
 from tile_plot import *
 from selection import Selection
 from pulse_finder import PulseFinder
@@ -48,11 +45,11 @@ if __name__ == '__main__':
                           args.nhits_cut)
     
     if args.nhits_cut:
-        print('all nhit cut events: {}'.format(selection))
+        print(selection)
      
     ''' Obtain pulses from cut events '''
     time_step        = 1
-    q_thresh         = float(900)
+    q_thresh         = float(1000)
     max_q_window_len = 5
     pulse_finder = PulseFinder(time_step,
                                q_thresh, 
