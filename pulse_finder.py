@@ -1,3 +1,7 @@
+''' ******************************************
+    Attempts to find pulses in specific events
+    ****************************************** '''
+
 from selection import Selection
 from collections import deque
 from collections import Counter
@@ -5,11 +9,6 @@ from dataclasses import dataclass
 from scipy.spatial import ConvexHull
 import time
 import numpy as np
-
-
-''' ******************************************
-    Attempts to find pulses in specific events
-    ****************************************** '''
 
 
 @dataclass
@@ -295,7 +294,6 @@ class PulseFinder:
         if sum(q_window) > q_thresh and pulse_start == False:
             # a new pulse was found, 
             # store as an event pulse
-            #print('candidate pulse start found at tile {}'.format(tile_id))
             eqw.set_pulse_start(tile_id, True)
             self.candidate_pulses[tile_id] = [[tile_id, self.event_hits[hc][0], self.event_hits[hc][3], sum(q_window)]]
 
@@ -303,7 +301,6 @@ class PulseFinder:
             self.candidate_pulses[tile_id].append([tile_id, self.event_hits[hc][0], self.event_hits[hc][3], sum(q_window)])
 
         elif sum(q_window) < q_thresh and pulse_start == True:
-            #print('candidate pulse end found at tile {}'.format(tile_id))
             eqw.set_pulse_start(tile_id, False)
             self.create_pulse(tile_id, self.event[0], self.candidate_pulses[tile_id]) 
             self.npulses_on_tiles[tile_id] += 1
