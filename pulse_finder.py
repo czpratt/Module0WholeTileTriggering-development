@@ -31,7 +31,7 @@ class Pulse:
 
 
 class EventChargeWindows:
-    ''' Event charge windows initiated as FIFO stacks '''
+    ''' Event charge windows initiated as FIFO stacks for each tile  '''
     def __init__(self):
         self.window_1  = None 
         self.window_2  = None 

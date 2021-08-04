@@ -44,18 +44,32 @@ To run the driver code of the investigation:
 - `configuration.py`: Handles tile layout information directly from passed `.yaml` file 
 
 - `selection.py`: Obtains information from a passed datalog file
-  If a cut on the number of hits per tile per event is activated, a dictionary is returned that is formatted as:
+  If a cut on the number of hits per tile per event is specified, a dictionary is returned that is formatted as:
   ```
     {evid_1: {tile_id_1: nhits_1, tile_id_2: nhits_2, ...},
      evid_2: {tile_id_1: nhits_1, ...}
      ...
     }
     ```
-- `pulse_finder.py`: Finds pulses within events once nhit cut is made from the dictionary obtained by `selection.py`, the pulse finding algorithm attempts to find pulses based on the amount of charge deposited on a tile for a given time slot.
+The events that satisfy the cut will be utilized to find potential pulses, a short burst of large amounts of charge in a short amount of time distributed on a tile. 
+
+- `pulse_finder.py`: Finds pulses from specified events is made from the dictionary obtained by `selection.py`. The pulse finding algorithm attempts to find pulses based on the amount of charge deposited on a tile for a given time slot. 
+
+The algorithm implements sixteen FIFO stacks that will function as charge windows which will simultaneously iterate in time scanning each tile for pulses. The current criteria for a pulse is the following:
+    1. charge threshold: 1000 * 10^3 e
+    2. time window: 5 * 0.1 microseconds
+    3. number of pulses found on tiles: 6 (to eliminate potential sync pulses)
+
+If these criteria are satisfied, then the pulses are stored in a finalized dictionary outputted at the end for future analysis.
+
+(More coming soon)
+
 
 - `tile_plot.py`: Plotting functionality
 
 - `main.py`: Main driver function 
+
+- `module0_evd.py`: Event display script created by LBNL scientists.
 
 ### Active Contributers ###
 
