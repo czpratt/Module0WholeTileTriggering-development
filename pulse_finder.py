@@ -1,17 +1,22 @@
-'''
-    Will be handing over a dictionary of cut hits
-'''
 from selection import Selection
 from collections import deque
+from collections import Counter
 from dataclasses import dataclass
 from scipy.spatial import ConvexHull
+import time
 import numpy as np
+
+
+''' ******************************************
+    Attempts to find pulses in specific events
+    ****************************************** '''
+
 
 @dataclass
 class Pulse:
     ''' Individual pulse creation '''
-    tile_id: int
     event_id: int
+    tile_id: int
     hit_at_start_time: int
     hit_at_end_time: int
     pulse_start_time: int
@@ -227,7 +232,9 @@ class PulseFinder:
         self.hit_ref              = None    # intermediate step
         self.event_hits           = None    # all hits within event
         self.candidate_pulses     = None    # candidate pulse storage
-        self.all_pulses           = []
+        self.event_pulses         = None
+        self.all_pulses           = {}
+        self.npulses_on_tiles     = None    # keeps track of how many 
 
     def create_pulse(self, 
                      tile_id, 
@@ -258,8 +265,8 @@ class PulseFinder:
         hit_positions    = [[hit[1], hit[2]] for hit in self.event_hits]
         pulse_area       = ConvexHull(hit_positions).volume
         
-        pulse = Pulse(tile_id,  
-                      event_id,
+        pulse = Pulse(event_id,  
+                      tile_id,
                       hit_start_time, 
                       hit_end_time, 
                       pulse_start_time, 
@@ -273,7 +280,7 @@ class PulseFinder:
                       peak_q_hit_y, 
                       pulse_area)
 
-        self.all_pulses.append(pulse)
+        self.event_pulses.append(pulse)
 
 
     def inspect_tile_for_pulses(self,
@@ -283,11 +290,12 @@ class PulseFinder:
                                 eqw,
                                 tile_id,
                                 hc):
+
         ''' Inspect individual tile to see if a pulse was found '''
         if sum(q_window) > q_thresh and pulse_start == False:
             # a new pulse was found, 
             # store as an event pulse
-            print('candidate pulse start found at tile {}'.format(tile_id))
+            #print('candidate pulse start found at tile {}'.format(tile_id))
             eqw.set_pulse_start(tile_id, True)
             self.candidate_pulses[tile_id] = [[tile_id, self.event_hits[hc][0], self.event_hits[hc][3], sum(q_window)]]
 
@@ -295,10 +303,11 @@ class PulseFinder:
             self.candidate_pulses[tile_id].append([tile_id, self.event_hits[hc][0], self.event_hits[hc][3], sum(q_window)])
 
         elif sum(q_window) < q_thresh and pulse_start == True:
-            print('candidate pulse end found at tile {}'.format(tile_id))
+            #print('candidate pulse end found at tile {}'.format(tile_id))
             eqw.set_pulse_start(tile_id, False)
             self.create_pulse(tile_id, self.event[0], self.candidate_pulses[tile_id]) 
-        
+            self.npulses_on_tiles[tile_id] += 1
+
             try:
                 del self.candidate_pulses[tile_id]
             except:
@@ -341,8 +350,23 @@ class PulseFinder:
 
 
     def initialize_candidate_pulses(self):
+        ''' Initialization of necessart criteria '''
         self.candidate_pulses = {}
+        self.event_pulses = []
+        self.npulses_on_tiles  = {i:0 for i in range(1, 16 + 1)}
 
+
+    def make_cut_on_npulses_per_tile(self):
+        ''' Make final cut to ensure this isn't a sync pulse '''
+        cut_list = {key:val for key, val in self.npulses_on_tiles.items() if val != 0}
+        if len(cut_list) > 7:
+            pass
+        else:
+            print('o-- potential WTT event at {} --o'.format(self.event[0]))
+            self.all_pulses[self.event[0]] = self.event_pulses
+    
+    
+    
     def obtain_event_pulses(self,
                             selection,
                             tiles_and_hits):
@@ -376,16 +400,23 @@ class PulseFinder:
             else:
                 ts += self.time_step
 
+        # analyze pulses on tile dictionary at the end
+        self.make_cut_on_npulses_per_tile()
+
+
 
     def find_pulses(self, 
                     selection):
         ''' Drives pulse finding '''
         cut_events = selection.get_cut_events()
+        start_time = time.time()
         for evid in cut_events.keys():
             print('evaluating event {}'.format(evid))
             self.event      = selection.get_event(evid)
             self.event_hits = selection.get_event_hits(self.event)
             tiles_and_hits  = cut_events[evid]
             event_pulses    = self.obtain_event_pulses(selection, tiles_and_hits)
-
-        print('all_pulses: {}'.format(self.all_pulses))
+    
+        end_time = time.time()
+        print('scan for pulses completed in {} seconds'.format(end_time - start_time))
+        print('all potential WTT events: {}'.format(self.all_pulses.keys()))

@@ -59,7 +59,7 @@ class Selection:
             Makes cuts based on nhits for individual events
         '''
         if evid % 1000 == 0:
-            print('Currently analyzing event {}'.format(evid))
+            print('Analyzing event {} of {} total events'.format(evid, self.events[-1][0]))
 
         _event               = self.events[evid]
         _event_hits          = self.hits[_event['hit_ref']]
@@ -95,8 +95,8 @@ class Selection:
         '''
         
         iter_start = 1
-        #iter_end = len(self.events) # toggle when necessary
-        iter_end = 100
+        iter_end = len(self.events) # toggle when necessary
+        #iter_end = 20000
         for event in range(iter_start, iter_end, 1):
             self.make_event_nhit_cut(event)
 
