@@ -56,9 +56,10 @@ The events that satisfy the cut will be utilized to find potential pulses, a sho
 - `pulse_finder.py`: Finds pulses from specified events is made from the dictionary obtained by `selection.py`. The pulse finding algorithm attempts to find pulses based on the amount of charge deposited on a tile for a given time slot. 
 
 The algorithm implements sixteen FIFO stacks that will function as charge windows which will simultaneously iterate in time scanning each tile for pulses. The current criteria for a pulse is the following:
-    1. charge threshold: 1000 * 10^3 e
-    2. time window: 5 * 0.1 microseconds
-    3. number of pulses found on tiles: 6 (to eliminate potential sync pulses)
+
+1. charge threshold: 1000 * 10^3 e
+2. time window: 5 * 0.1 microseconds
+3. number of pulses found on tiles: 6 (to eliminate potential sync pulses)
 
 If these criteria are satisfied, then the pulses are stored in a finalized dictionary outputted at the end for future analysis.
 
