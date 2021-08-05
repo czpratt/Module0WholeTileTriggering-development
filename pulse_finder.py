@@ -325,7 +325,6 @@ class PulseFinder:
         ''' 
         Determine if a pulse was found at every charge window 
         * currently set up this way so class variables update accordingly
-        * variables are passed this way so they are changed correctly
         - eqw = event charge window
         - hc  = hit count
         '''
