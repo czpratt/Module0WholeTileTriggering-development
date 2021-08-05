@@ -37,15 +37,31 @@ if __name__ == '__main__':
                         metavar='FILE',
                         type=str,
                         help='yaml file specifying the geometry')
-
+    
     parser.add_argument('--nhits_cut',
                         metavar='NHITS CUT',
                         type=int,
                         default=None,
                         help='cut for number of hits on a tile') 
 
+    '''
+    parser.add_argument('--pulse_count',
+                        metavar='PULSE COUNT',
+                        type=int,
+                        default=None,
+                        help='if activated, sets rule on npulses per Module 0')
+    '''
+
     args  = parser.parse_args()
-    
+   
+    if not args.nhits_cut:
+        print('\n**************************************')
+        print('*** ERROR: SPECIFY nhits_cut VALUE ***')
+        print('***   bad error will be thrown.    ***')
+        print('**************************************\n')
+    else:
+        pass
+
     ''' Obtain selected datalog file information '''
     selection = Selection(args.datalog_file, 
                           args.geometry_file, 
