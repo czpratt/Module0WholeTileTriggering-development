@@ -2,7 +2,7 @@ import time
 import yaml
 import h5py as h
 
-from configuration import Configuration
+from histogram_configuration import Configuration
 
 class Selection:
     '''

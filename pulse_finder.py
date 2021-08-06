@@ -50,15 +50,15 @@ class EventChargeWindows:
         self.window_15 = None 
         self.window_16 = None 
         
-        self.window_pulse_start_1 = None
-        self.window_pulse_start_2 = None
-        self.window_pulse_start_3 = None
-        self.window_pulse_start_4 = None
-        self.window_pulse_start_5 = None
-        self.window_pulse_start_6 = None
-        self.window_pulse_start_7 = None
-        self.window_pulse_start_8 = None
-        self.window_pulse_start_9 = None
+        self.window_pulse_start_1  = None
+        self.window_pulse_start_2  = None
+        self.window_pulse_start_3  = None
+        self.window_pulse_start_4  = None
+        self.window_pulse_start_5  = None
+        self.window_pulse_start_6  = None
+        self.window_pulse_start_7  = None
+        self.window_pulse_start_8  = None
+        self.window_pulse_start_9  = None
         self.window_pulse_start_10 = None
         self.window_pulse_start_11 = None
         self.window_pulse_start_12 = None
@@ -67,8 +67,9 @@ class EventChargeWindows:
         self.window_pulse_start_15 = None
         self.window_pulse_start_16 = None
         
-        self.all_windows = None
+        self.all_windows          = None
         self.all_pulse_indicators = None
+        self.pulse_count          = None
         self.startup()
 
     
@@ -224,9 +225,7 @@ class PulseFinder:
         self.hit_count            = 0       # keeps track of hits in event
         self.event_start_time     = None    # event start time (detector time)
         self.event_end_time       = None    # event end time (detector time)
-        self.TPC                  = None    # tpc1 indicator
         self.tile                 = None    # tile
-        self.z_anode              = None    # z_anode
         self.event                = None    # individual event
         self.hit_ref              = None    # intermediate step
         self.event_hits           = None    # all hits within event
@@ -324,7 +323,6 @@ class PulseFinder:
         ''' 
         Determine if a pulse was found at every charge window 
         * currently set up this way so class variables update accordingly
-        * variables are passed this way so they are changed correctly
         - eqw = event charge window
         - hc  = hit count
         '''
@@ -356,6 +354,7 @@ class PulseFinder:
     def make_cut_on_npulses_per_tile(self):
         ''' Make final cut to ensure this isn't a sync pulse '''
         cut_list = {key:val for key, val in self.npulses_on_tiles.items() if val != 0}
+        
         if len(cut_list) > 7:
             pass
         else:
@@ -365,8 +364,7 @@ class PulseFinder:
     
     
     def obtain_event_pulses(self,
-                            selection,
-                            tiles_and_hits):
+                            selection):
         ''' Finds pulses within cut events '''
         self.event_start_time = self.event_hits[0][3]
         self.event_end_time   = self.event_hits[-1][3]
@@ -407,12 +405,12 @@ class PulseFinder:
         ''' Drives pulse finding '''
         cut_events = selection.get_cut_events()
         start_time = time.time()
+       
         for evid in cut_events.keys():
             print('evaluating event {}'.format(evid))
             self.event      = selection.get_event(evid)
             self.event_hits = selection.get_event_hits(self.event)
-            tiles_and_hits  = cut_events[evid]
-            event_pulses    = self.obtain_event_pulses(selection, tiles_and_hits)
+            event_pulses    = self.obtain_event_pulses(selection) 
     
         end_time = time.time()
         print('scan for pulses completed in {} seconds'.format(end_time - start_time))
