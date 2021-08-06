@@ -1,4 +1,6 @@
-Jacobs:
+*** Events found from working algorithm ***
+
+Jacob's control datalog files:
 
 datalog_2021_04_01_21_24_52_CESTevd.h5
 - wtt events: 4799, 27555, 30859, 30862, 33196, 48725, 53690, 57130, 63418
