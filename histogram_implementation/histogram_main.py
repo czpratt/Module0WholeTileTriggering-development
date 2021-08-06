@@ -21,9 +21,9 @@ from scipy.spatial import ConvexHull
 from collections import deque
 from dataclasses import dataclass
 from tile_plot import *
-from selection import Selection
-from pulse_finder import PulseFinder
-from configuration import Configuration
+from histogram_selection import Selection
+from histogram_pulse_finder import PulseFinder
+from histogram_configuration import Configuration
 
 
 if __name__ == '__main__':
@@ -43,14 +43,6 @@ if __name__ == '__main__':
                         type=int,
                         default=None,
                         help='cut for number of hits on a tile') 
-
-    '''
-    parser.add_argument('--pulse_count',
-                        metavar='PULSE COUNT',
-                        type=int,
-                        default=None,
-                        help='if activated, sets rule on npulses per Module 0')
-    '''
 
     args  = parser.parse_args()
    
@@ -74,6 +66,8 @@ if __name__ == '__main__':
     time_step        = 1
     q_thresh         = float(1000)
     max_q_window_len = 5
+    n = 16
+
     pulse_finder = PulseFinder(time_step,
                                q_thresh, 
                                max_q_window_len,

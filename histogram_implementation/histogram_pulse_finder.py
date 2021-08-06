@@ -3,7 +3,7 @@
     *** WORK IN PROGRESS ***
 '''
 
-from selection import Selection
+from histogram_selection import Selection
 from collections import deque
 from collections import Counter
 from dataclasses import dataclass
@@ -63,11 +63,6 @@ class ChargeWindow:
 
 
     ### function for handling charge stuff ###
-
-
-
-
-
         
 def assemble_charge_window_dict(max_q_window_len,
                                 q_thresh,
@@ -83,42 +78,47 @@ def assemble_charge_window_dict(max_q_window_len,
     return window_dict
 
 
-def main():
-    parser = argparse.ArgumentParser(description='output event information')
-    parser.add_argument('--datalog_file',
-                        metavar='FILE',
-                        type=str,
-                        help='datalog file of the form (...)_CESTevd.h5')
 
-    parser.add_argument('--geometry_file',
-                        metavar='FILE',
-                        type=str,
-                        help='yaml file specifying the geometry')
+class PulseFinder:
+    ''' Class for finding pulses within a TPC waveform '''
+    def __init__(self,
+                  max_q_window_length: int,
+                  q_threshold: float,
+                  time_step: int
+                  n: int):
 
-    args  = parser.parse_args()
+        self.time_step           = time_step
+        self.q_thresh            = q_thresh
+        self.max_q_window_length = max_q_window_len
+        
+        self.event      = None
+        self.hits       = None
+        self.event_hits = None
+        self.hit_count  = None
 
 
-    try:
-        data_file = h.File(args.datalog_file, 'r')
-    except FileNotFoundError:
-        print('Data file ({}) could not be imported'.format(args.data_file))
+    def obtain_event_pulses(self,
+                            selection,
+                            tiles_and_hits):
+        ''' Attempts to find pulses in an event '''
+        # histogram implementation goes here
 
-    print('data file: {}'.format(data_file))
-    events = data_file['events']
-    hits = data_file['hits']
-    
-    event_id = 57130
-    event = events[event_id]
-    event_hits = hits[event['hit_ref']]
 
-    # we'll still need 16 stacks for each tile!
-    n = 16
-    max_q_window_len = 5
-    q_thresh = 1000
 
-    window_dict = assemble_charge_window_dict(max_q_window_len,
-                                              q_thresh,
-                                              n)
-    
+    def find_pulses(self,
+                    selection):
+        ''' Main driver of pulse scanning '''
+        cut_events = selection.get_cut_events()
+        start_time = time.time()
 
-main()
+        for evid in cut_events.keys():
+            print('evaluating event {}'.format(evid))
+            self.event      = selection.get_event(evid)
+            self.event_hits = selection.get_event_hits(self.event)
+            tiles_and_hits  = cut_events[evid]
+            event_pulses = self.obtain_event_pulses(selection,
+                                                    tiles_and_hits)
+        
+        end_time = time.time()
+        print('scan for pulses completed in {} seconds'.format(end_time - start_time))
+        
