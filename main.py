@@ -24,6 +24,7 @@ from tile_plot import *
 from selection import Selection
 from pulse_finder import PulseFinder
 from configuration import Configuration
+from pulse_histograms import *
 
 
 if __name__ == '__main__':
@@ -80,4 +81,8 @@ if __name__ == '__main__':
                                args.datalog_file, 
                                args.geometry_file)
 
-    pulse_finder.find_pulses(selection)
+    pulses = pulse_finder.find_pulses(selection)
+
+    make_pulse_histograms(selection,
+                          pulses)
+

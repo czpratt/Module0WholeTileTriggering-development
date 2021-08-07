@@ -231,6 +231,7 @@ class PulseFinder:
         self.event_hits           = None    # all hits within event
         self.candidate_pulses     = None    # candidate pulse storage
         self.event_pulses         = None
+        self.tile_pulses          = None
         self.all_pulses           = {}
         self.npulses_on_tiles     = None    # keeps track of how many 
 
@@ -277,8 +278,11 @@ class PulseFinder:
                       peak_q_hit_x, 
                       peak_q_hit_y, 
                       pulse_area)
-
-        self.event_pulses.append(pulse)
+        
+        if tile_id not in self.tile_pulses:
+            self.tile_pulses[tile_id] = []
+        
+        self.tile_pulses[tile_id].append(pulse)
 
 
     def inspect_tile_for_pulses(self,
@@ -296,8 +300,10 @@ class PulseFinder:
             eqw.set_pulse_start(tile_id, True)
             self.candidate_pulses[tile_id] = [[tile_id, self.event_hits[hc][0], self.event_hits[hc][3], sum(q_window)]]
 
+
         elif sum(q_window) > q_thresh and pulse_start == True:
             self.candidate_pulses[tile_id].append([tile_id, self.event_hits[hc][0], self.event_hits[hc][3], sum(q_window)])
+
 
         elif sum(q_window) < q_thresh and pulse_start == True:
             eqw.set_pulse_start(tile_id, False)
@@ -347,7 +353,8 @@ class PulseFinder:
     def initialize_candidate_pulses(self):
         ''' Initialization of necessary criteria '''
         self.candidate_pulses = {}
-        self.event_pulses = []
+        self.event_pulses = {}
+        self.tile_pulses = {}
         self.npulses_on_tiles  = {i:0 for i in range(1, 16 + 1)}
 
 
@@ -383,7 +390,7 @@ class PulseFinder:
                 # append to stack
                 _tile_id = selection.get_tile_id(self.event_hits[hit_count])
                 event_q_windows.append_charges(_tile_id, 
-                                               self.event_hits[hit_count][4]) 
+                                               abs(self.event_hits[hit_count][4])) 
                 
                 # determine whether there was a pulse at each tile
                 self.make_pulse_determination(event_q_windows, 
@@ -396,8 +403,8 @@ class PulseFinder:
                 ts += self.time_step
 
         # analyze pulses on tile dictionary at the end
-        self.make_cut_on_npulses_per_tile()
-
+        #self.make_cut_on_npulses_per_tile()
+        
 
 
     def find_pulses(self, 
@@ -410,9 +417,21 @@ class PulseFinder:
             print('evaluating event {}'.format(evid))
             self.event      = selection.get_event(evid)
             self.event_hits = selection.get_event_hits(self.event)
-            event_pulses    = self.obtain_event_pulses(selection) 
-    
+            self.obtain_event_pulses(selection) 
+            self.event_pulses[evid] = self.tile_pulses
+            self.tile_pulses = {}
+
+
         end_time = time.time()
+        #print(self.event_pulses)
         print('scan for pulses completed in {} seconds'.format(end_time - start_time))
-        print('all potential WTT events: {}'.format(self.all_pulses.keys()))
-        print('pulse information: {}'.format(self.all_pulses))
+        print('all potential WTT events: {}'.format(self.event_pulses.keys()))
+    
+        return self.event_pulses
+
+        ''' Big note:
+            -- Multiple hits can be logged at the same time
+		AKA multiple 'pulses' can be actual hits that are below charge 
+		are logged on the tile, potentially triggering the end of a pulse '''
+
+        
