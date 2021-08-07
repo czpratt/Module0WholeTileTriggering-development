@@ -183,7 +183,7 @@ class PulseFinder:
                 2) logging absolute value of charge by convention
         '''
         for instile in self.instile_dict:
-            if tile_id == instile or tile_id != self.NO_HIT:
+            if tile_id == instile and tile_id != self.NO_HIT:
                 self.instile_dict[instile].charges.append(abs(charge))
             else:
                 self.instile_dict[instile].charges.append(self.NO_Q)
@@ -243,6 +243,31 @@ class PulseFinder:
         plt.show()
    
     
+    def make_histogram_data(self):
+        ''' Making histogram data for pulse finding 
+        ---> most likely a temporary function '''
+        
+        # temporary testing
+        charges = self.instile_dict[7].charges
+        times   = self.instile_dict[7].time_stamps
+        nbins   = 500
+
+        charges_test = self.instile_dict[1].charges
+        times_test   = self.instile_dict[1].time_stamps
+
+        #match = charges == charges_test
+        #print('match: {}'.format(match))
+
+        hist = None
+        t_edges = None
+        q_edges = None
+
+        hist, t_edges, q_edges = np.histogram2d(times, charges, bins=nbins)
+        print('hist: {}'.format(hist))
+        print('t_edges: {}'.format(t_edges))
+        print('q_edges: {}'.format(q_edges))
+
+
 
     def obtain_event_pulses(self,
                             selection):
@@ -250,7 +275,8 @@ class PulseFinder:
         # here we would then activate the pulse finding algorithm
         # Mike wants this done over the bins of the made histogram, 
         # however it's not working well right now.....
-         
+        
+        self.make_histogram_data()
 
         # set up histograms for the tiles
         # --> maybe this is where to utilize the bins in order to set up the 
