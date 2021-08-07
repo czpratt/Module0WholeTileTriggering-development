@@ -231,12 +231,13 @@ class PulseFinder:
                    self.instile_dict[7].charges,
                    bins=nbins)
         '''
-        axs.hist(self.instile_dict[7].time_stamps,
-                 weights=self.instile_dict[7].charges,
+        axs.hist(self.instile_dict[2].time_stamps,
+                 weights=self.instile_dict[2].charges,
                  bins=nbins,
-                 histtype='step', label='binned')
+                 histtype='step', 
+                 label='binned')
         
-        axs.set_title('Tile 7, Event {}'.format(self.event[0]))
+        axs.set_title('Tile 2, Event {}'.format(self.event[0]))
         axs.set_xlabel(r'timestep [0.1 $\mathrm{\mu}$s]')
         axs.set_ylabel(r'charge [1000 * $10^3$ e]')
 
@@ -263,11 +264,13 @@ class PulseFinder:
         q_edges = None
 
         hist, t_edges, q_edges = np.histogram2d(times, charges, bins=nbins)
-        print('hist: {}'.format(hist))
+        
+        #print('hist: {}'.format(hist))
         print('t_edges: {}'.format(t_edges))
         print('q_edges: {}'.format(q_edges))
-
-
+        
+        plt.imshow(hist, extent=[t_edges[0], t_edges[-1], q_edges[0], q_edges[-1]])
+        plt.show()
 
     def obtain_event_pulses(self,
                             selection):
@@ -276,12 +279,12 @@ class PulseFinder:
         # Mike wants this done over the bins of the made histogram, 
         # however it's not working well right now.....
         
-        self.make_histogram_data()
+        #self.make_histogram_data()
 
         # set up histograms for the tiles
         # --> maybe this is where to utilize the bins in order to set up the 
         #    charge window? also need to figure out color norm lol
-        #self.plot_histograms() 
+        self.plot_histograms() 
 
 
 
@@ -295,7 +298,7 @@ class PulseFinder:
         for evid in cut_events.keys():
             print('evaluating event {}'.format(evid))
             # initialize and obtain information,
-            # find pulses
+            # obtain pulses
             self.reinitialize()
             self.event      = selection.get_event(evid)
             self.event_hits = selection.get_event_hits(self.event)
