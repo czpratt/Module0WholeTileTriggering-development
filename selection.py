@@ -2,7 +2,7 @@ import time
 import yaml
 import h5py as h
 
-from histogram_configuration import Configuration
+from configuration import Configuration
 
 class Selection:
     '''
@@ -94,9 +94,9 @@ class Selection:
             Driver function making cuts on all events in a datalog file
         '''
         
-        iter_start = 57128
-        #iter_end = len(self.events) # toggle when necessary
-        iter_end = 57131
+        iter_start = 1
+        iter_end = len(self.events) # toggle when necessary
+        #iter_end = 20000
         for event in range(iter_start, iter_end, 1):
             self.make_event_nhit_cut(event)
 

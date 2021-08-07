@@ -20,7 +20,6 @@ from typing import Tuple, List
 from scipy.spatial import ConvexHull
 from collections import deque
 from dataclasses import dataclass
-from tile_plot import *
 from histogram_selection import Selection
 from histogram_pulse_finder import PulseFinder
 from histogram_configuration import Configuration
@@ -63,15 +62,14 @@ if __name__ == '__main__':
         print(selection)
      
     ''' Obtain pulses from nhit cut events '''
+    n                = 16
     time_step        = 1
     q_thresh         = float(1000)
     max_q_window_len = 5
-    n = 16
 
-    pulse_finder = PulseFinder(time_step,
+    pulse_finder = PulseFinder(n,
+                               time_step,
                                q_thresh, 
-                               max_q_window_len,
-                               args.datalog_file, 
-                               args.geometry_file)
+                               max_q_window_len)
 
     pulse_finder.find_pulses(selection)

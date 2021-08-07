@@ -345,7 +345,7 @@ class PulseFinder:
 
 
     def initialize_candidate_pulses(self):
-        ''' Initialization of necessart criteria '''
+        ''' Initialization of necessary criteria '''
         self.candidate_pulses = {}
         self.event_pulses = []
         self.npulses_on_tiles  = {i:0 for i in range(1, 16 + 1)}
@@ -415,3 +415,4 @@ class PulseFinder:
         end_time = time.time()
         print('scan for pulses completed in {} seconds'.format(end_time - start_time))
         print('all potential WTT events: {}'.format(self.all_pulses.keys()))
+        print('pulse information: {}'.format(self.all_pulses))
