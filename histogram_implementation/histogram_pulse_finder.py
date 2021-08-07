@@ -12,7 +12,10 @@ import time
 import numpy as np
 import argparse
 import h5py as h
+import matplotlib.pyplot as plt
+import matplotlib
 
+matplotlib.rcParams['text.usetex'] = True   # for LaTeX font on tile plots
 
 @dataclass
 class Pulse:
@@ -45,22 +48,66 @@ class Instile:
         self.max_q_window_len = max_q_window_len
         self.q_thresh         = q_thresh
         
-        self.window      = None
-        self.charges     = None
-        self.time_stamps = None
+        self.window      = None     # charge window
+        self.charges     = None     # list of charges from hits
+        self.time_stamps = None     # list of time stamps of hits
+        self.histogram   = None     # placeholder for tile histogram
+        self.q_edges     = None     # placeholder for charge edges for histogram
+        self.t_edges     = None     # placeholder for time edges for histogram
+        
         self.startup()
     
     
     def startup(self):
-        ''' Initialization '''
+        ''' Initialization for redundancy '''
         self.window      = deque()
         self.charges     = []
         self.time_stamps = []
 
+
     def __repr__(self):
         ''' String representation function '''
-        return ('window: {}, charges = {}\n'.format(self.window,
-                                                    self.charges))
+        return ('window: {}, charges = {}, time stamps = {}\n'.format(self.window,
+                                                                      self.charges,
+                                                                      self.time_stamps))
+    
+    def set_histogram(self,
+                      histogram):
+        ''' Sets histogram for the tile '''
+        self.histogram = histogram
+
+
+    def set_q_edges(self,
+                    q_edges):
+        ''' Sets histogram edges for charge '''
+        self.q_edges = q_edges
+
+    
+    def set_t_edges(self,
+                    t_edges):
+        ''' Sets histogram edges for time stamps '''
+        self.t_edges = t_edges
+   
+
+    def get_histogram(self):
+        ''' Getter for histogram '''
+        return self.histogram
+
+
+    def get_q_edges(self):
+        ''' Getter for charge edges for histogram '''
+        return self.q_edges
+
+
+    def get_t_edges(self):
+        ''' Getter for time stamp edges for histogram '''
+        return self.t_edges
+
+
+    def set_pulse_indicator(self,
+                            decision):
+        ''' Sets the pulse indicator '''
+        self.pulse_indicator = decision
 
 
     def check_window_length(self):
@@ -69,12 +116,6 @@ class Instile:
             pass
         else:
             self.window.popleft()
-
-
-    def set_pulse_indicator(self,
-                            decision):
-        ''' Sets the pulse indicator '''
-        self.pulse_indicator = decision
 
 
 
@@ -91,17 +132,19 @@ class PulseFinder:
         self.q_thresh          = q_thresh             # charge threshold
         self.max_q_window_len  = max_q_window_len     # maximum length of charge window
 
-        self.event      = None
-        self.hits       = None
-        self.event_hits = None
-        self.hit_count  = None
-
+        self.event      = None      # analyzed event
+        self.hits       = None      # hits of analyzed event
+        self.event_hits = None      # hits specific to event
+        self.hit_count  = None      # hit counter for keeping track of iteration
+        self.instile_dict = None    # dictionary of instiles
+        
+        self.NO_HIT = -10       # constant for when no hit occurred
+        self.NO_Q   = 0         # constant for when no charge
+        
         self.event_start_time = None
         self.event_end_time   = None
+        
 
-        self.instile_dict = None
-   
-        self.NO_Q   = 0
 
     def assemble_instile_dict(self):
         ''' Creates dictionary of charge windows for each tile '''
@@ -121,6 +164,7 @@ class PulseFinder:
         self.event_start_time = None
         self.event_end_time   = None
         self.time_stamps      = None
+        self.ts               = None
         self.hit_count        = 0
 
     
@@ -134,11 +178,13 @@ class PulseFinder:
             --- a couple scenarios:
             - if hit occurred at timestamp, append corresponding charge and timestamp
             - if no hit occurred at timestamp, append 0 charge and the timestamp 
-            NOTE: multiple hits can be logged at the same time on the same tile  
+            NOTES: 
+                1) multiple hits can be logged at the same time on the same tile  
+                2) logging absolute value of charge by convention
         '''
         for instile in self.instile_dict:
-            if tile_id == instile:
-                self.instile_dict[instile].charges.append(charge)
+            if tile_id == instile or tile_id != self.NO_HIT:
+                self.instile_dict[instile].charges.append(abs(charge))
             else:
                 self.instile_dict[instile].charges.append(self.NO_Q)
     
@@ -147,8 +193,7 @@ class PulseFinder:
 
     def assemble_charge_and_time_lists(self,
                                        selection):
-        ''' Assembles instile lists for charge and time '''
-        # assemble bin edges for charge and time
+        ''' Assembles instile lists for charge and time for pulse finding '''
         while self.ts < self.event_end_time:
             
             # just need to check if there's a timestep here and evaluate
@@ -160,25 +205,59 @@ class PulseFinder:
                 self.hit_count += 1
 
             else:
+                self.append_charge_and_time(self.NO_HIT,
+                                            self.NO_Q) 
                 self.ts += self.time_step
 
 
+    def plot_histograms(self):
+        ''' 
+            Makes histograms
+            --> will probably need to adjust bin size!
+            NOTES:
+                1) will need to loop if there are multiple tiles 
+        ''' 
+        nbins = 500
+        fig, axs = plt.subplots()
+         
+        print('min time_stamp: {}'.format(min(self.instile_dict[7].time_stamps)))
+        print('max time_stamp: {}'.format(max(self.instile_dict[7].time_stamps)))
+        print('min charge: {}'.format(min(self.instile_dict[7].charges)))
+        print('max charge: {}'.format(max(self.instile_dict[7].charges)))
+        
+        # 2D color norms are weird
+        '''
+        axs.hist2d(self.instile_dict[7].time_stamps,
+                   self.instile_dict[7].charges,
+                   bins=nbins)
+        '''
+        axs.hist(self.instile_dict[7].time_stamps,
+                 weights=self.instile_dict[7].charges,
+                 bins=nbins,
+                 histtype='step', label='binned')
+        
+        axs.set_title('Tile 7, Event {}'.format(self.event[0]))
+        axs.set_xlabel(r'timestep [0.1 $\mathrm{\mu}$s]')
+        axs.set_ylabel(r'charge [1000 * $10^3$ e]')
+
+        plt.show()
+   
+    
 
     def obtain_event_pulses(self,
                             selection):
         ''' Attempts to find pulses in an event '''
-        self.reinitialize()
-        self.event_start_time = self.event_hits[0][3]
-        self.event_end_time   = self.event_hits[-1][3]
-        self.ts               = self.event_start_time
-        self.instile_dict     = self.assemble_instile_dict() # dictionary of 16 instiles
-        self.time_stamps      = []
+        # here we would then activate the pulse finding algorithm
+        # Mike wants this done over the bins of the made histogram, 
+        # however it's not working well right now.....
+         
 
-        self.assemble_charge_and_time_lists(selection)
+        # set up histograms for the tiles
+        # --> maybe this is where to utilize the bins in order to set up the 
+        #    charge window? also need to figure out color norm lol
+        #self.plot_histograms() 
 
-        # now we need to make it into a histogram
 
-        
 
 
     def find_pulses(self,
@@ -189,10 +268,19 @@ class PulseFinder:
 
         for evid in cut_events.keys():
             print('evaluating event {}'.format(evid))
+            # initialize and obtain information,
+            # find pulses
+            self.reinitialize()
             self.event      = selection.get_event(evid)
             self.event_hits = selection.get_event_hits(self.event)
-            event_pulses    = self.obtain_event_pulses(selection)
+            self.event_start_time = self.event_hits[0][3]
+            self.event_end_time   = self.event_hits[-1][3]
+            self.ts               = self.event_start_time
+            self.instile_dict     = self.assemble_instile_dict() 
+            self.time_stamps      = []
+            self.assemble_charge_and_time_lists(selection)    
+             
+            event_pulses       = self.obtain_event_pulses(selection)
         
         end_time = time.time()
         print('scan for pulses completed in {} seconds'.format(end_time - start_time))
-        
