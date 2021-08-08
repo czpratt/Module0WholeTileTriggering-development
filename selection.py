@@ -97,8 +97,8 @@ class Selection:
         #iter_start = 1
         #iter_end = len(self.events) # toggle when necessary
         #iter_end = 20000
-        iter_start = 57128
-        iter_end = 57132
+        iter_start = 2000
+        iter_end = 6000
         for event in range(iter_start, iter_end, 1):
             self.make_event_nhit_cut(event)
 

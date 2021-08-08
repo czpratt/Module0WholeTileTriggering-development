@@ -41,13 +41,18 @@ class PulseHistogram():
         ''' Assembles instile lists for charge and time for pulse finding '''
         while self.ts <= self.max_end_time:
             
+            #print('{}, {}'.format(self.ts, self.pulse_event_hits[self.hit_count][3]))
+
             # just need to check if there's a timestep here and evaluate
             if self.ts == self.pulse_event_hits[self.hit_count][3]:
 
                 _tile_id = selection.get_tile_id(self.pulse_event_hits[self.hit_count])
                 
+                print('tile_id, self.pulse_tile_id = {}, {}'.format(_tile_id, self.pulse_tile_id))
+
                 if _tile_id == self.pulse_tile_id:
                     # match
+                    print(self.pulse_event_hits[self.hit_count][4])
                     self.time_stamps.append(self.ts)
                     self.charges.append(abs(self.pulse_event_hits[self.hit_count][4])) 
                 else:
@@ -118,7 +123,12 @@ class PulseHistogram():
         self.max_end_time   = max(self.end_times)
         self.ts             = self.min_start_time
 
+        print('{}, {}'.format(self.ts, self.max_end_time))
+
         self.assemble_charge_and_time_lists(selection)
+
+        #print('self.charges: {}'.format(self.charges))
+        #print('self.time_stamps: {}'.format(self.time_stamps))
 
         self.plot_histogram()
 

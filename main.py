@@ -82,7 +82,7 @@ if __name__ == '__main__':
                                args.geometry_file)
 
     pulses = pulse_finder.find_pulses(selection)
-
+    
     make_pulse_histograms(selection,
                           pulses)
 
