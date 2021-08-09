@@ -65,7 +65,7 @@ If these criteria are satisfied, then the pulses are stored in a finalized dicti
 
 (More coming soon)
 
-- `plot_histogram.py`: Histogram plotting functionality for pulses
+- `pulse_histograms.py`: Histogram plotting functionality for pulses
 
 - `tile_plot.py`: Plotting functionality
 
