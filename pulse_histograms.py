@@ -1,18 +1,23 @@
+'''
+    Histogram plotting functionality for pulses
+'''
 import numpy as np
 import matplotlib.pyplot as plt
-
 
 class PulseHistogram():
     def __init__(self,
                  selection,
                  evid,
                  pulses,
-                 pulse_tile_id):
+                 pulse_tile_id,
+                 decision):
         ''' Class for a pulse histogram '''
         self.evid   = evid
         self.pulses = pulses
         self.pulse_tile_id = pulse_tile_id
-        self.pulse_event = None
+        self.decision      = decision
+
+        self.pulse_event      = None
         self.pulse_event_hits = None
         self.event_start_time = None
         self.ts               = None
@@ -20,18 +25,21 @@ class PulseHistogram():
         self.start_times = None
         self.end_times   = None
        
-        self.min_start_time = None
-        self.max_end_time = None
+        self.min_start_time   = None
+        self.max_end_time     = None
         self.pulse_time_range = None
-        self.ts = None
+        self.ts               = None
     
         self.hit_count = None
 
-        self.charges     = None
-        self.time_stamps = None
+        self.charges      = None
+        self.time_stamps  = None
+        self.pulse_ids    = None
+        self.end_pulse_id = None
 
         self.NO_HIT = -10
-        self.NO_Q = 0
+        self.NO_Q   = 0
+        
 
         self.startup(selection)
     
@@ -39,20 +47,15 @@ class PulseHistogram():
     def assemble_charge_and_time_lists(self,
                                        selection):
         ''' Assembles instile lists for charge and time for pulse finding '''
-        while self.ts <= self.max_end_time:
-            
-            #print('{}, {}'.format(self.ts, self.pulse_event_hits[self.hit_count][3]))
+        while self.ts < self.max_end_time:
 
-            # just need to check if there's a timestep here and evaluate
+            # check if there's a timestep here and evaluate
             if self.ts == self.pulse_event_hits[self.hit_count][3]:
 
                 _tile_id = selection.get_tile_id(self.pulse_event_hits[self.hit_count])
-                
-                print('tile_id, self.pulse_tile_id = {}, {}'.format(_tile_id, self.pulse_tile_id))
 
                 if _tile_id == self.pulse_tile_id:
-                    # match
-                    print(self.pulse_event_hits[self.hit_count][4])
+                    # a match
                     self.time_stamps.append(self.ts)
                     self.charges.append(abs(self.pulse_event_hits[self.hit_count][4])) 
                 else:
@@ -104,44 +107,52 @@ class PulseHistogram():
         ''' Activated on creation '''
         self.pulse_event      = selection.get_event(self.evid)
         self.pulse_event_hits = selection.get_event_hits(self.pulse_event)
-       
+
+        pulse_event_hit_ids = []
+
         self.start_times = []
         self.end_times   = []
+        self.pulse_ids   = []
 
-        self.charges = []
+        self.charges     = []
         self.time_stamps = []
-
-        self.hit_count = 0
+        
         self.time_step = 1
+
+        # inefficient but necessary for now
+        for hit in self.pulse_event_hits:
+            pulse_event_hit_ids.append(hit[0])
 
         for pulse in self.pulses:
             self.start_times.append(pulse.pulse_start_time)
             self.end_times.append(pulse.pulse_end_time)
+            self.pulse_ids.append(pulse.hit_at_start_time)
 
-        
-        self.min_start_time = min(self.start_times)
-        self.max_end_time   = max(self.end_times)
+        self.min_start_time = int(min(self.start_times))
+        self.max_end_time   = int(max(self.end_times))
+       
+        pulse_start_id       = int(min(self.pulse_ids))
+        pulse_start_id_index = pulse_event_hit_ids.index(pulse_start_id)
+        self.hit_count       = pulse_start_id_index
         self.ts             = self.min_start_time
 
-        print('{}, {}'.format(self.ts, self.max_end_time))
-
         self.assemble_charge_and_time_lists(selection)
-
-        #print('self.charges: {}'.format(self.charges))
-        #print('self.time_stamps: {}'.format(self.time_stamps))
-
-        self.plot_histogram()
+        
+        if self.decision:
+            self.plot_histogram()
 
 
 def make_pulse_histograms(selection,
-                          all_pulses):
+                          all_pulses,
+                          decision):
      
     for evid in all_pulses:
         for tile_pulse in all_pulses[evid]:
             pulse_histogram = PulseHistogram(selection,
                                              evid,
                                              all_pulses[evid][tile_pulse],
-                                             tile_pulse)
+                                             tile_pulse,
+                                             decision)
 
-            del pulse_histogram
+            #del pulse_histogram
 

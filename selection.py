@@ -49,6 +49,7 @@ class Selection:
         else:
             pass
 
+
     def __repr__(self):
         return ('nhit cut events: {}'.format(self.nhit_cut_events))
 
@@ -93,16 +94,13 @@ class Selection:
         '''
             Driver function making cuts on all events in a datalog file
         '''
-        
-        #iter_start = 1
-        #iter_end = len(self.events) # toggle when necessary
-        #iter_end = 20000
-        iter_start = 2000
-        iter_end = 6000
+        iter_start = 1
+        iter_end = len(self.events)
         for event in range(iter_start, iter_end, 1):
             self.make_event_nhit_cut(event)
 
         return self.nhit_cut_events
+
 
     def get_tile_id(self, 
                     hit) -> int:
@@ -113,24 +111,29 @@ class Selection:
         
         return _tile_id
 
+
     def get_event(self, 
                   evid):
         ''' Fetches specific event '''
         return self.events[evid]
+
 
     def get_event_hits(self, 
                        event):
         ''' Fetches the hits within an event '''
         return self.hits[event['hit_ref']] # good
 
+
     def get_z_anode(self, 
                     tile_id):
         ''' Fetches z_anode location '''
         return self.config.tile_positions[tile_id - 1][0]
     
+
     def get_num_events(self):
         ''' Fetches total number of events '''
         return self.events[-1][0]
+
 
     def get_cut_events(self):
         ''' Fetches nhit cut events'''

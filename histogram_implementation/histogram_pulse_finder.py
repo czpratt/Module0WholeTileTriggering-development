@@ -219,6 +219,7 @@ class PulseFinder:
         ''' 
         nbins = 500
         fig, axs = plt.subplots()
+        tile_for_plotting = 9
          
         print('min time_stamp: {}'.format(min(self.instile_dict[7].time_stamps)))
         print('max time_stamp: {}'.format(max(self.instile_dict[7].time_stamps)))
@@ -231,13 +232,13 @@ class PulseFinder:
                    self.instile_dict[7].charges,
                    bins=nbins)
         '''
-        axs.hist(self.instile_dict[2].time_stamps,
-                 weights=self.instile_dict[2].charges,
+        axs.hist(self.instile_dict[tile_for_plotting].time_stamps,
+                 weights=self.instile_dict[tile_for_plotting].charges,
                  bins=nbins,
                  histtype='step', 
                  label='binned')
         
-        axs.set_title('Tile 2, Event {}'.format(self.event[0]))
+        axs.set_title('Tile {}, Event {}'.format(tile_for_plotting, self.event[0]))
         axs.set_xlabel(r'timestep [0.1 $\mathrm{\mu}$s]')
         axs.set_ylabel(r'charge [1000 * $10^3$ e]')
 
@@ -271,6 +272,7 @@ class PulseFinder:
         
         plt.imshow(hist, extent=[t_edges[0], t_edges[-1], q_edges[0], q_edges[-1]])
         plt.show()
+
 
     def obtain_event_pulses(self,
                             selection):
