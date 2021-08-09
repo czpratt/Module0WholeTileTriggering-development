@@ -24,6 +24,7 @@ from tile_plot import *
 from selection import Selection
 from pulse_finder import PulseFinder
 from configuration import Configuration
+from pulse_histograms import *
 
 
 if __name__ == '__main__':
@@ -44,13 +45,8 @@ if __name__ == '__main__':
                         default=None,
                         help='cut for number of hits on a tile') 
 
-    '''
-    parser.add_argument('--pulse_count',
-                        metavar='PULSE COUNT',
-                        type=int,
-                        default=None,
-                        help='if activated, sets rule on npulses per Module 0')
-    '''
+    parser.add_argument('--plot_histogram', action='store_true', default=False)
+
 
     args  = parser.parse_args()
    
@@ -72,12 +68,17 @@ if __name__ == '__main__':
      
     ''' Obtain pulses from nhit cut events '''
     time_step        = 1
-    q_thresh         = float(800)
-    max_q_window_len = 10
+    q_thresh         = float(2500)
+    max_q_window_len = 30
     pulse_finder = PulseFinder(time_step,
                                q_thresh, 
                                max_q_window_len,
                                args.datalog_file, 
                                args.geometry_file)
 
-    pulse_finder.find_pulses(selection)
+    pulses = pulse_finder.find_pulses(selection)
+    
+    make_pulse_histograms(selection,
+                          pulses,
+                          args.plot_histogram)
+

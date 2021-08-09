@@ -134,7 +134,7 @@ class EventChargeWindows:
         self.pulse_start_14 = False
         self.pulse_start_15 = False
         self.pulse_start_16 = False
-    
+   
 
     def check_length(self, 
                      max_length):
@@ -230,9 +230,10 @@ class PulseFinder:
         self.hit_ref              = None    # intermediate step
         self.event_hits           = None    # all hits within event
         self.candidate_pulses     = None    # candidate pulse storage
-        self.event_pulses         = None
-        self.all_pulses           = {}
-        self.npulses_on_tiles     = None    # keeps track of how many 
+        self.tile_pulses          = None    # pulses for individual tiles
+        self.event_pulses         = None    # pulses for all events
+        self.npulses_on_tiles     = None    # keeps track of how many pulses on a tile occur
+
 
     def create_pulse(self, 
                      tile_id, 
@@ -277,8 +278,11 @@ class PulseFinder:
                       peak_q_hit_x, 
                       peak_q_hit_y, 
                       pulse_area)
-
-        self.event_pulses.append(pulse)
+        
+        if tile_id not in self.tile_pulses:
+            self.tile_pulses[tile_id] = []
+        
+        self.tile_pulses[tile_id].append(pulse)
 
 
     def inspect_tile_for_pulses(self,
@@ -296,11 +300,15 @@ class PulseFinder:
             eqw.set_pulse_start(tile_id, True)
             self.candidate_pulses[tile_id] = [[tile_id, self.event_hits[hc][0], self.event_hits[hc][3], sum(q_window)]]
 
+
         elif sum(q_window) > q_thresh and pulse_start == True:
+            # continuation of a pulse
             self.candidate_pulses[tile_id].append([tile_id, self.event_hits[hc][0], self.event_hits[hc][3], sum(q_window)])
+
 
         elif sum(q_window) < q_thresh and pulse_start == True:
             eqw.set_pulse_start(tile_id, False)
+            # end of a pulse
             self.create_pulse(tile_id, self.event[0], self.candidate_pulses[tile_id]) 
             self.npulses_on_tiles[tile_id] += 1
 
@@ -322,7 +330,8 @@ class PulseFinder:
 
         ''' 
         Determine if a pulse was found at every charge window 
-        * currently set up this way so class variables update accordingly
+        ** currently set up this way so class variables update accordingly,
+          ordinary for loops don't work with the current eqw class set up
         - eqw = event charge window
         - hc  = hit count
         '''
@@ -347,19 +356,26 @@ class PulseFinder:
     def initialize_candidate_pulses(self):
         ''' Initialization of necessary criteria '''
         self.candidate_pulses = {}
-        self.event_pulses = []
+        self.tile_pulses = {}
         self.npulses_on_tiles  = {i:0 for i in range(1, 16 + 1)}
 
 
     def make_cut_on_npulses_per_tile(self):
         ''' Make final cut to ensure this isn't a sync pulse '''
-        cut_list = {key:val for key, val in self.npulses_on_tiles.items() if val != 0}
-        
-        if len(cut_list) > 7:
+        nspikes = 20
+        # for redundancy
+        cut_tile_dict = {key:val for key, val in self.npulses_on_tiles.items() if val != 0 and val > nspikes}
+       
+        self.tile_pulses = {key:val for key, val in self.tile_pulses.items() if len(val) > nspikes}
+
+        if len(cut_tile_dict) > 7:
             pass
         else:
             print('o-- potential WTT event at {} --o'.format(self.event[0]))
-            self.all_pulses[self.event[0]] = self.event_pulses
+            if self.event[0] not in self.event_pulses:
+                self.event_pulses[self.event[0]] = {}
+            
+            self.event_pulses[self.event[0]] = self.tile_pulses
     
     
     
@@ -372,7 +388,7 @@ class PulseFinder:
         event_q_windows       = EventChargeWindows()
         hit_count = self.hit_count
         self.initialize_candidate_pulses()
-        
+
         while ts < self.event_end_time:
                 
             # validate length of charge windows
@@ -383,7 +399,7 @@ class PulseFinder:
                 # append to stack
                 _tile_id = selection.get_tile_id(self.event_hits[hit_count])
                 event_q_windows.append_charges(_tile_id, 
-                                               self.event_hits[hit_count][4]) 
+                                               abs(self.event_hits[hit_count][4])) 
                 
                 # determine whether there was a pulse at each tile
                 self.make_pulse_determination(event_q_windows, 
@@ -397,7 +413,7 @@ class PulseFinder:
 
         # analyze pulses on tile dictionary at the end
         self.make_cut_on_npulses_per_tile()
-
+        
 
 
     def find_pulses(self, 
@@ -405,14 +421,22 @@ class PulseFinder:
         ''' Drives pulse finding '''
         cut_events = selection.get_cut_events()
         start_time = time.time()
-       
+        self.event_pulses = {}
+
         for evid in cut_events.keys():
             print('evaluating event {}'.format(evid))
             self.event      = selection.get_event(evid)
             self.event_hits = selection.get_event_hits(self.event)
-            event_pulses    = self.obtain_event_pulses(selection) 
-    
+            self.obtain_event_pulses(selection) 
+            
+
         end_time = time.time()
         print('scan for pulses completed in {} seconds'.format(end_time - start_time))
-        print('all potential WTT events: {}'.format(self.all_pulses.keys()))
-        print('pulse information: {}'.format(self.all_pulses))
+        print('all potential WTT events: {}'.format(self.event_pulses.keys()))
+    
+        return self.event_pulses
+
+        ''' Big note:
+            -- Multiple hits can be logged at the same time
+		AKA multiple 'pulses' can be actual hits that are below charge 
+		are logged on the tile, potentially triggering the end of a pulse '''
