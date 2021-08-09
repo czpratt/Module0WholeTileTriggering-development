@@ -230,9 +230,9 @@ class PulseFinder:
         self.hit_ref              = None    # intermediate step
         self.event_hits           = None    # all hits within event
         self.candidate_pulses     = None    # candidate pulse storage
-        self.tile_pulses          = None
-        self.event_pulses         = None
-        self.npulses_on_tiles     = None    # keeps track of how many 
+        self.tile_pulses          = None    # pulses for individual tiles
+        self.event_pulses         = None    # pulses for all events
+        self.npulses_on_tiles     = None    # keeps track of how many pulses on a tile occur
 
 
     def create_pulse(self, 
@@ -302,11 +302,13 @@ class PulseFinder:
 
 
         elif sum(q_window) > q_thresh and pulse_start == True:
+            # continuation of a pulse
             self.candidate_pulses[tile_id].append([tile_id, self.event_hits[hc][0], self.event_hits[hc][3], sum(q_window)])
 
 
         elif sum(q_window) < q_thresh and pulse_start == True:
             eqw.set_pulse_start(tile_id, False)
+            # end of a pulse
             self.create_pulse(tile_id, self.event[0], self.candidate_pulses[tile_id]) 
             self.npulses_on_tiles[tile_id] += 1
 
@@ -328,7 +330,8 @@ class PulseFinder:
 
         ''' 
         Determine if a pulse was found at every charge window 
-        * currently set up this way so class variables update accordingly
+        ** currently set up this way so class variables update accordingly,
+          ordinary for loops don't work with the current eqw class set up
         - eqw = event charge window
         - hc  = hit count
         '''
@@ -360,6 +363,7 @@ class PulseFinder:
     def make_cut_on_npulses_per_tile(self):
         ''' Make final cut to ensure this isn't a sync pulse '''
         nspikes = 20
+        # for redundancy
         cut_tile_dict = {key:val for key, val in self.npulses_on_tiles.items() if val != 0 and val > nspikes}
        
         self.tile_pulses = {key:val for key, val in self.tile_pulses.items() if len(val) > nspikes}
