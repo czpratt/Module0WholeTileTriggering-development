@@ -64,12 +64,14 @@ if __name__ == '__main__':
     ''' Obtain pulses from nhit cut events '''
     n                = 16
     time_step        = 1
-    q_thresh         = float(1000)
-    max_q_window_len = 5
+    delta_time_slice = 50
+    q_thresh         = float(5000)
+    max_q_window_len = delta_time_slice
 
     pulse_finder = PulseFinder(n,
                                time_step,
                                q_thresh, 
-                               max_q_window_len)
+                               max_q_window_len,
+                               delta_time_slice)
 
     pulse_finder.find_pulses(selection)
