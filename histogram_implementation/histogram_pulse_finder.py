@@ -36,17 +36,6 @@ class Pulse:
     pulse_area: float
 
 
-class TileSpike:
-    ''' A specific 'spike' that happens on a pulse '''
-    def __init__(self,
-                 tile_id,
-                 time_stamp):
-
-        self.tile_id = tile_id
-        self.spike_timestamp = time_stamp   # at spike's occurance
-
-
-
 
 
 class Instile:
@@ -54,9 +43,8 @@ class Instile:
         - self explanatory; stores information about a tile
           throughout an event, including its charge window, 
           and potential lists to be used for histograms         
-         -- this will also handle prewindows, etc., eventually 
-          
-          '''
+         -- this will also handle prewindows, etc., eventually       
+    '''
     def __init__(self,
                  max_q_window_len: int,
                  q_thresh: float):
