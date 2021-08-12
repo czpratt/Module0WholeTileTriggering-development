@@ -46,29 +46,35 @@ class Instile:
         
         self.npulse_count = None
 
+        self.first_hit_at_lsb_index = None
+
         self.startup()
     
     
     def startup(self):
         ''' Initialization for redundancy '''
         self.window          = deque()
+        self.charges         = deque()
+        self.time_stamps     = deque()
         self.pulse_indicator = False
-        self.charges         = []
-        self.time_stamps     = []
         self.npulse_count    = 0
 
         # to potentially handle multiple pulses at one tile
         self.pulse_start_time_stamp = []
-        self.pulse_end_time_stamp = []
+        self.pulse_end_time_stamp   = []
+        self.first_hit_at_lsb_index = []
+        self.charges_list           = []
+        self.time_stamps_list       = []
 
 
     def __repr__(self):
         ''' String representation function '''
-        return ('start time = {}, end time = {}, charges = {}, time stamps = {}\n'.format(
+        return ('start time = {}, end time = {}, charges = {}, time stamps = {}, index = {}\n'.format(
                                                           self.pulse_start_time_stamp,
                                                           self.pulse_end_time_stamp,
-                                                          self.charges,
-                                                          self.time_stamps))
+                                                          self.charges_list,
+                                                          self.time_stamps_list,
+                                                          self.first_hit_at_lsb_index))
     
     def set_pulse_start_time_stamp(self,
                                    pulse_start_time):
@@ -88,7 +94,23 @@ class Instile:
         ''' Sets the pulse indicator '''
         self.pulse_indicator = decision
 
+   
+    def set_first_hit_at_lsb_index(self,
+                                   first_hit_at_lsb_index):
+        ''' Sets the index of the hit at lsb '''
+        self.first_hit_at_lsb_index.append(first_hit_at_lsb_index)
+
     
+    def store_charges_in_list(self):
+        ''' Store individual stacks to handle multiple hits '''
+        self.charges_list.append(self.charges)
+    
+    
+    def store_time_stamps_in_list(self):
+        ''' Store individual stacks to handle multiple hits '''
+        self.time_stamps_list.append(self.time_stamps)
+
+
     def increment_npulse_count(self):
         ''' Increments npulse count '''
         self.npulse_count += 1
@@ -130,6 +152,9 @@ class PulseFinder:
         self.NO_Q                  = 0      # constant for when no charge
         self.SYNC_PULSE_CONSTRAINT = 8      # ntile value for sync pulse classification
 
+        self.first_hit_at_lsb_index = None
+        self.first_hit_at_lsb_flag = None
+
 
     def assemble_instile_dict(self):
         ''' Creates dictionary of charge windows for each tile '''
@@ -151,55 +176,61 @@ class PulseFinder:
         self.event_end_time   = None
         self.time_stamps      = None
         self.ts               = None
+        self.first_hit_at_lsb_index = 0
+        self.first_hit_at_lsb_flag  = None
         self.hit_count        = 0
         self.max_time_step    = 0
-        self.tile_pulses      = {}
+        
+        self.tile_pulses     = {}
+        self.complete_pulses = {}
+        self.event_pulses    = {}
 
 
     def append_charge_and_time(self,
                                tile_id,
+                               time_stamp,
                                charge):
-        ''' 
-            Appends charge and time to appropriate lists 
-            instile == tile_id
-            self.instile_dict[instile] == tile information
-            --- a couple scenarios:
-            - if hit occurred at timestamp, append corresponding charge and timestamp
-            - if no hit occurred at timestamp, append 0 charge and the timestamp 
-            NOTES: 
-                1) multiple hits can be logged at the same time on the same tile  
-                2) logging absolute value of charge by convention
-        '''
-        for instile in self.instile_dict:
-            if tile_id == instile and tile_id != self.NO_HIT:
-                self.instile_dict[instile].charges.append(abs(charge))
-            else:
-                self.instile_dict[instile].charges.append(self.NO_Q)
-    
-            self.instile_dict[instile].time_stamps.append(self.ts)
+        ''' Appending instile charge and timestamp lists post processing '''
+        self.instile_dict[tile_id].time_stamps.append(time_stamp)
+        self.instile_dict[tile_id].charges.append(charge)
 
 
     def assemble_charge_and_time_lists(self):
         ''' Assembles instile lists for charge and time for pulse finding '''
-        
-        print(self.instile_dict)
-    
-        '''
-        while self.ts < self.event_end_time:
+        # iterating through tiles that logged a pulse
+        for tile_id in self.tile_pulses:
             
-            # just need to check if there's a timestep here and evaluate
-            if self.ts == self.event_hits[self.hit_count][3]:
+            # iterating through all logged pulses
+            for i in range (0, len(self.instile_dict[tile_id].pulse_start_time_stamp), 1):
+                _pulse_start_time = self.instile_dict[tile_id].pulse_start_time_stamp[i]
+                _pulse_end_time   = self.instile_dict[tile_id].pulse_end_time_stamp[i]
+                _hit_index        = self.instile_dict[tile_id].first_hit_at_lsb_index[i]
+                _ts               = _pulse_start_time
+                
+                # iterate until the end of the pulse
+                while _ts < _pulse_end_time:
+                     
+                    if _ts == self.event_hits[_hit_index][3]:
+                        # a match, 
+                        # append charge and associated time stamp to instile deque
+                        self.append_charge_and_time(tile_id,
+                                                    _ts,
+                                                    self.event_hits[_hit_index][4])
+                        _hit_index += 1
+                   
+                    else:
+                        _ts += self.time_step
 
-                _tile_id = selection.get_tile_id(self.event_hits[self.hit_count])
-                self.append_charge_and_time(_tile_id,
-                                            self.event_hits[self.hit_count][4]) 
-                self.hit_count += 1
+           
+            # store charges and timestamps stacks into list once completed
+            self.instile_dict[tile_id].store_charges_in_list()
+            self.instile_dict[tile_id].store_time_stamps_in_list()
 
-            else:
-                self.append_charge_and_time(self.NO_HIT,
-                                            self.NO_Q) 
-                self.ts += self.time_step
-         '''
+            # store completed pulses in event per instile
+            if tile_id not in self.complete_pulses:
+                self.complete_pulses[tile_id] = {}
+
+            self.complete_pulses[tile_id] = self.instile_dict[tile_id]
 
 
     def append_charge_windows(self,
@@ -232,10 +263,12 @@ class PulseFinder:
                 #print('beginning of a pulse was found at tile {}, ts = {}'.format(instile, self.ts))
                 self.instile_dict[instile].set_pulse_indicator(True)
                 self.instile_dict[instile].set_pulse_start_time_stamp(self.ts - self.delta_time_slice)
+                self.instile_dict[instile].set_first_hit_at_lsb_index(self.first_hit_at_lsb_index)  
                 self.instile_dict[instile].increment_npulse_count()
                 
                 # add to tile_pulses to keep track
                 self.tile_pulses[instile] = self.instile_dict[instile].get_npulse_count()
+
 
             elif self.q_thresh < _sum_window and _start_indicator == True:
                 # do nothing since there's nothing to do
@@ -263,11 +296,10 @@ class PulseFinder:
             self.assemble_charge_and_time_lists()
 
 
+
     def obtain_event_pulses(self,
                             selection):
         ''' Attempts to find pulses in an event '''
-        
-        # lasts throughout an event
         while self.ts < self.event_end_time:
             
             # determine max timestep and determine if we'd still be in the
@@ -287,6 +319,11 @@ class PulseFinder:
                 if self.ts == self.event_hits[self.hit_count][3]:
                     # a hit was found within the timing window,
                     # obtain tile location and append to stack
+                    # -- check if this is the first hit found by lsb
+                    if self.first_hit_at_lsb_flag == False:
+                        self.first_hit_at_lsb_index = self.hit_count
+                        self.first_hit_at_lsb_flag = True
+
                     _tile_id = selection.get_tile_id(self.event_hits[self.hit_count])
                     _charge  = abs(self.event_hits[self.hit_count][4])
                     self.append_charge_windows(_tile_id,
@@ -305,12 +342,14 @@ class PulseFinder:
             # since at certain timestamps there can be many, many hits
             self.clear_instile_windows()
 
+            # reset all hit lsb information
+            self.first_hit_at_lsb_index = 0
+            self.first_hit_at_lsb_flag  = False
 
         # concluded looping through event,
         # determine if this was a sync pulse or not
         self.sync_pulse_determination()
-
-
+        
 
     def find_pulses(self,
                     selection):
@@ -330,9 +369,11 @@ class PulseFinder:
             self.ts               = self.event_start_time
             self.instile_dict     = self.assemble_instile_dict() 
             
-            event_pulses       = self.obtain_event_pulses(selection)
+            self.obtain_event_pulses(selection)
+
+            if self.complete_pulses:
+                self.event_pulses[evid] = self.complete_pulses 
             
-        
 
         end_time = time.time()
         print('scan for pulses completed in {} seconds'.format(end_time - start_time))
