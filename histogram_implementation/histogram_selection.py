@@ -94,9 +94,9 @@ class Selection:
             Driver function making cuts on all events in a datalog file
         '''
         
-        iter_start = 57128
+        iter_start = 57000
         #iter_end = len(self.events) # toggle when necessary
-        iter_end = 57131
+        iter_end = 58000
         for event in range(iter_start, iter_end, 1):
             self.make_event_nhit_cut(event)
 

@@ -46,7 +46,7 @@ class PulseHistogram():
 
     def assemble_charge_and_time_lists(self,
                                        selection):
-        ''' Assembles instile lists for charge and time for pulse finding '''
+        ''' Assembles list of charge and time for pulse finding '''
         while self.ts < self.max_end_time:
 
             # check if there's a timestep here and evaluate
@@ -75,18 +75,11 @@ class PulseHistogram():
         ''' 
             Makes histograms
             --> will probably need to adjust bin size!
-            NOTES:
-                1) will need to loop if there are multiple tiles 
         ''' 
         nbins = 300
         fig, axs = plt.subplots()
         
         # 2D color norms are weird
-        '''
-        axs.hist2d(self.instile_dict[7].time_stamps,
-                   self.instile_dict[7].charges,
-                   bins=nbins)
-        '''
         axs.hist(self.time_stamps,
                  weights=self.charges,
                  bins=nbins,
@@ -120,9 +113,11 @@ class PulseHistogram():
         self.time_step = 1
 
         # inefficient but necessary for now
+        # accumulate all hit id's to find a match
         for hit in self.pulse_event_hits:
             pulse_event_hit_ids.append(hit[0])
 
+        # accumulate 'pulse' start and end times
         for pulse in self.pulses:
             self.start_times.append(pulse.pulse_start_time)
             self.end_times.append(pulse.pulse_end_time)
@@ -134,7 +129,7 @@ class PulseHistogram():
         pulse_start_id       = int(min(self.pulse_ids))
         pulse_start_id_index = pulse_event_hit_ids.index(pulse_start_id)
         self.hit_count       = pulse_start_id_index
-        self.ts             = self.min_start_time
+        self.ts              = self.min_start_time
 
         self.assemble_charge_and_time_lists(selection)
         
@@ -145,7 +140,7 @@ class PulseHistogram():
 def make_pulse_histograms(selection,
                           all_pulses,
                           decision):
-     
+    ''' Iterates through all event pulses to potentially plot histograms ''' 
     for evid in all_pulses:
         for tile_pulse in all_pulses[evid]:
             pulse_histogram = PulseHistogram(selection,
