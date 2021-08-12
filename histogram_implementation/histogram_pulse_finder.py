@@ -17,41 +17,22 @@ import matplotlib
 
 matplotlib.rcParams['text.usetex'] = True   # for LaTeX font on tile plots
 
-@dataclass
-class Pulse:
-    ''' Individual pulse creation '''
-    event_id: int
-    tile_id: int
-    hit_at_start_time: int
-    hit_at_end_time: int
-    pulse_start_time: int
-    pulse_end_time: int
-    delta_t: int
-    total_q: float
-    peak_q: float
-    peak_q_hit_id: int
-    peak_q_hit_time: int
-    peak_q_hit_x: float
-    peak_q_hit_y: float
-    pulse_area: float
-
-
-
-
 class Instile:
     ''' INformation Storage about a TILE 
-        - self explanatory; stores information about a tile
+         ==> stores information about a tile
           throughout an event, including its charge window, 
           and potential lists to be used for histograms         
          -- this will also handle prewindows, etc., eventually       
     '''
     def __init__(self,
                  max_q_window_len: int,
-                 q_thresh: float):
+                 q_thresh: float,
+                 tile_id: int):
                  
         self.max_q_window_len = max_q_window_len
         self.q_thresh         = q_thresh
-        
+        self.tile_id          = tile_id
+
         self.window          = None     # charge window
         self.pulse_indicator = None     # indicator for the start of a pulse 
         
@@ -63,6 +44,8 @@ class Instile:
         
         self.histogram   = None     # placeholder for tile histogram
         
+        self.npulse_count = None
+
         self.startup()
     
     
@@ -72,24 +55,31 @@ class Instile:
         self.pulse_indicator = False
         self.charges         = []
         self.time_stamps     = []
-        
+        self.npulse_count    = 0
+
+        # to potentially handle multiple pulses at one tile
+        self.pulse_start_time_stamp = []
+        self.pulse_end_time_stamp = []
+
 
     def __repr__(self):
         ''' String representation function '''
-        return ('window: {}, charges = {}, time stamps = {}\n'.format(self.window,
-                                                                      self.charges,
-                                                                      self.time_stamps))
+        return ('start time = {}, end time = {}, charges = {}, time stamps = {}\n'.format(
+                                                          self.pulse_start_time_stamp,
+                                                          self.pulse_end_time_stamp,
+                                                          self.charges,
+                                                          self.time_stamps))
     
     def set_pulse_start_time_stamp(self,
                                    pulse_start_time):
         ''' Start time of the pulse '''
-        self.pulse_start_time_stamp = pulse_start_time 
-
+        self.pulse_start_time_stamp.append(pulse_start_time)
+    
     
     def set_pulse_end_time_stamp(self,
                                  pulse_end_time):
         ''' Start time of the pulse '''
-        self.pulse_end_time_stamp = pulse_end_time 
+        self.pulse_end_time_stamp.append(pulse_end_time)
 
 
 
@@ -98,8 +88,15 @@ class Instile:
         ''' Sets the pulse indicator '''
         self.pulse_indicator = decision
 
+    
+    def increment_npulse_count(self):
+        ''' Increments npulse count '''
+        self.npulse_count += 1
 
-
+    
+    def get_npulse_count(self):
+        ''' Fetches npulse_count '''
+        return self.npulse_count
 
 
 class PulseFinder:
@@ -117,24 +114,21 @@ class PulseFinder:
         self.max_q_window_len  = max_q_window_len     # maximum length of charge window
         self.delta_time_slice  = delta_time_slice     # time window for accumulating charge window
 
-        print('self.max_q_window_len: {}'.format(self.max_q_window_len))
+        self.event         = None      # analyzed event
+        self.hits          = None      # hits of analyzed event
+        self.event_hits    = None      # hits specific to event
+        self.hit_count     = None      # hit counter for keeping track of iteration
+        self.instile_dict  = None    # dictionary of instiles
 
-        self.max_time_step = None
-
-        self.event      = None      # analyzed event
-        self.hits       = None      # hits of analyzed event
-        self.event_hits = None      # hits specific to event
-        self.hit_count  = None      # hit counter for keeping track of iteration
-        self.instile_dict = None    # dictionary of instiles
-        
-        self.NO_HIT = -10       # constant for when no hit occurred
-        self.NO_Q   = 0         # constant for when no charge
-        
         self.event_start_time = None
         self.event_end_time   = None
+        self.max_time_step    = None   # maximum attainable time slice
         
-        self.tile_pulses = None
-        self.npulses_on_tiles = None    # for later
+        self.tile_pulses      = None   # keeps track of npulses on a tile
+        
+        self.NO_HIT                = -10    # constant for when no hit occurred
+        self.NO_Q                  = 0      # constant for when no charge
+        self.SYNC_PULSE_CONSTRAINT = 8      # ntile value for sync pulse classification
 
 
     def assemble_instile_dict(self):
@@ -142,7 +136,8 @@ class PulseFinder:
         instile_dict = {}
         for tile in range(1, self.nwindows + 1, 1):
             instile = Instile(self.max_q_window_len,
-                              self.q_thresh)
+                              self.q_thresh,
+                              tile)
     
             instile_dict[tile] = instile
     
@@ -184,9 +179,12 @@ class PulseFinder:
             self.instile_dict[instile].time_stamps.append(self.ts)
 
 
-    def assemble_charge_and_time_lists(self,
-                                       selection):
+    def assemble_charge_and_time_lists(self):
         ''' Assembles instile lists for charge and time for pulse finding '''
+        
+        print(self.instile_dict)
+    
+        '''
         while self.ts < self.event_end_time:
             
             # just need to check if there's a timestep here and evaluate
@@ -201,15 +199,7 @@ class PulseFinder:
                 self.append_charge_and_time(self.NO_HIT,
                                             self.NO_Q) 
                 self.ts += self.time_step
-
-   
-    
-
-    
-    def check_instile_dict_lengths(self):
-        ''' For prudence '''
-        for instile in self.instile_dict:
-            self.instile_dict[instile].check_window_length()
+         '''
 
 
     def append_charge_windows(self,
@@ -222,44 +212,55 @@ class PulseFinder:
             else:
                 self.instile_dict[instile].window.append(self.NO_Q)
 
+
     def clear_instile_windows(self):
+        ''' Clears all instile charge windows '''
         for instile in self.instile_dict:
             self.instile_dict[instile].window.clear()
 
 
     def make_pulse_determination(self):
-        ''' Determines whether a pulse was found or not '''
+        ''' 
+            Determines whether a pulse was found or not, and 
+            stores values accordingly
+        '''
         for instile in self.instile_dict:
             _sum_window = sum(self.instile_dict[instile].window)
             _start_indicator = self.instile_dict[instile].pulse_indicator
 
             if self.q_thresh < _sum_window and _start_indicator == False:
-                print('beginning of a pulse was found at tile {}, ts = {}'.format(instile, self.ts))
-                #print(self.instile_dict[instile].window)
-                #print('len(window), _sum_window, indicator: {}, {}, {}'.format(len(self.instile_dict[instile].window), _sum_window, self.instile_dict[instile].pulse_indicator))
+                #print('beginning of a pulse was found at tile {}, ts = {}'.format(instile, self.ts))
                 self.instile_dict[instile].set_pulse_indicator(True)
                 self.instile_dict[instile].set_pulse_start_time_stamp(self.ts - self.delta_time_slice)
+                self.instile_dict[instile].increment_npulse_count()
                 
-                # then add this to the tile_pulses dictionary
-                #self.tile_pulses[instile] = [[tile_]] 
+                # add to tile_pulses to keep track
+                self.tile_pulses[instile] = self.instile_dict[instile].get_npulse_count()
 
             elif self.q_thresh < _sum_window and _start_indicator == True:
-                #print('continuation of a pulse at tile {}, ts = {}'.format(instile, self.ts))
-                #print('len(window), _sum_window, indicator: {}, {}, {}'.format(len(self.instile_dict[instile].window), _sum_window, self.instile_dict[instile].pulse_indicator))
-                
                 # do nothing since there's nothing to do
                 pass
 
 
             elif self.q_thresh > _sum_window and _start_indicator == True:
-                print('end of a pulse was found at {}, ts = {}'.format(instile, self.ts))
+                #print('end of a pulse was found at {}, ts = {}'.format(instile, self.ts))
                 self.instile_dict[instile].set_pulse_indicator(False)
                 self.instile_dict[instile].set_pulse_end_time_stamp(self.ts)
-                
-                # create the pulse and store it here
-                self.create_pulse(instile, 
-                                  self.event[0],
-                                  )
+               
+
+
+    def sync_pulse_determination(self):
+        ''' Determine if pulses within an event are related to syncing '''
+        if len(self.tile_pulses) > self.SYNC_PULSE_CONSTRAINT:
+            print('********************************************')
+            print('* event {} is most likely a sync pulse,'.format(self.event[0]))
+            print('* containing {} tiles that had a \'pulse\''.format(len(self.tile_pulses)))
+            print('********************************************')
+        else:
+            print('o-----------------------------------------o')
+            print('event {} does not contain a sync pulse'.format(self.event[0]))
+            print('o-----------------------------------------o')
+            self.assemble_charge_and_time_lists()
 
 
     def obtain_event_pulses(self,
@@ -273,16 +274,16 @@ class PulseFinder:
             # time range of an event
             self.max_time_step = self.ts + self.delta_time_slice 
 
-            if self.max_time_step > self.event_end_time:
-                # completely break out of while loop,
-                # done finding pulses
-                break
-            else:
-                pass
-            
             # now iterate through the time slice
             while self.ts < self.max_time_step:
-                
+             
+                # end case,
+                # ensures a constrained iteration
+                if self.hit_count == len(self.event_hits):
+                    self.ts = self.event_end_time
+                    break
+
+                # otherwise check if there's a time stamp within time slice
                 if self.ts == self.event_hits[self.hit_count][3]:
                     # a hit was found within the timing window,
                     # obtain tile location and append to stack
@@ -305,7 +306,10 @@ class PulseFinder:
             self.clear_instile_windows()
 
 
-        # at the end of the loop
+        # concluded looping through event,
+        # determine if this was a sync pulse or not
+        self.sync_pulse_determination()
+
 
 
     def find_pulses(self,
@@ -325,13 +329,9 @@ class PulseFinder:
             self.event_end_time   = self.event_hits[-1][3]
             self.ts               = self.event_start_time
             self.instile_dict     = self.assemble_instile_dict() 
-            self.time_stamps      = []
             
             event_pulses       = self.obtain_event_pulses(selection)
             
-            # unnecessary now
-            #self.assemble_charge_and_time_lists(selection)    
-             
         
 
         end_time = time.time()
