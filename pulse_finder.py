@@ -1,442 +1,276 @@
-''' ******************************************
-    Attempts to find pulses in specific events
-    ****************************************** '''
-
-from selection import Selection
 from collections import deque
 from collections import Counter
 from dataclasses import dataclass
 from scipy.spatial import ConvexHull
 import time
 import numpy as np
+import argparse
+import h5py as h
+import matplotlib.pyplot as plt
+import matplotlib
 
+from instile import Instile
+from selection import Selection
 
-@dataclass
-class Pulse:
-    ''' Individual pulse creation '''
-    event_id: int
-    tile_id: int
-    hit_at_start_time: int
-    hit_at_end_time: int
-    pulse_start_time: int
-    pulse_end_time: int
-    delta_t: int
-    total_q: float
-    peak_q: float
-    peak_q_hit_id: int
-    peak_q_hit_time: int
-    peak_q_hit_x: float
-    peak_q_hit_y: float
-    pulse_area: float
-
-
-class EventChargeWindows:
-    ''' Event charge windows initiated as FIFO stacks for each tile  '''
-    def __init__(self):
-        self.window_1  = None 
-        self.window_2  = None 
-        self.window_3  = None 
-        self.window_4  = None 
-        self.window_5  = None 
-        self.window_6  = None 
-        self.window_7  = None 
-        self.window_8  = None 
-        self.window_9  = None 
-        self.window_10 = None 
-        self.window_11 = None 
-        self.window_12 = None 
-        self.window_13 = None 
-        self.window_14 = None 
-        self.window_15 = None 
-        self.window_16 = None 
-        
-        self.window_pulse_start_1  = None
-        self.window_pulse_start_2  = None
-        self.window_pulse_start_3  = None
-        self.window_pulse_start_4  = None
-        self.window_pulse_start_5  = None
-        self.window_pulse_start_6  = None
-        self.window_pulse_start_7  = None
-        self.window_pulse_start_8  = None
-        self.window_pulse_start_9  = None
-        self.window_pulse_start_10 = None
-        self.window_pulse_start_11 = None
-        self.window_pulse_start_12 = None
-        self.window_pulse_start_13 = None
-        self.window_pulse_start_14 = None
-        self.window_pulse_start_15 = None
-        self.window_pulse_start_16 = None
-        
-        self.all_windows          = None
-        self.all_pulse_indicators = None
-        self.pulse_count          = None
-        self.startup()
-
-    
-    def __repr__(self):
-        return ('{}'.format(self.all_windows))
-    
-
-    def startup(self):
-        ''' 
-            Initializes all windows as empty stacks,
-            list of all windows,
-            and pulse start indicators 
-        '''
-        self.window_1  = deque() 
-        self.window_2  = deque() 
-        self.window_3  = deque() 
-        self.window_4  = deque() 
-        self.window_5  = deque() 
-        self.window_6  = deque() 
-        self.window_7  = deque() 
-        self.window_8  = deque() 
-        self.window_9  = deque() 
-        self.window_10 = deque() 
-        self.window_11 = deque() 
-        self.window_12 = deque() 
-        self.window_13 = deque() 
-        self.window_14 = deque() 
-        self.window_15 = deque() 
-        self.window_16 = deque()
-        
-        self.all_windows = [] 
-        self.all_windows.append(self.window_1) 
-        self.all_windows.append(self.window_2) 
-        self.all_windows.append(self.window_3) 
-        self.all_windows.append(self.window_4) 
-        self.all_windows.append(self.window_5) 
-        self.all_windows.append(self.window_6) 
-        self.all_windows.append(self.window_7) 
-        self.all_windows.append(self.window_8) 
-        self.all_windows.append(self.window_9) 
-        self.all_windows.append(self.window_10) 
-        self.all_windows.append(self.window_11) 
-        self.all_windows.append(self.window_12) 
-        self.all_windows.append(self.window_13) 
-        self.all_windows.append(self.window_14) 
-        self.all_windows.append(self.window_15) 
-        self.all_windows.append(self.window_16) 
-        
-        self.pulse_start_1  = False 
-        self.pulse_start_2  = False
-        self.pulse_start_3  = False
-        self.pulse_start_4  = False
-        self.pulse_start_5  = False
-        self.pulse_start_6  = False
-        self.pulse_start_7  = False
-        self.pulse_start_8  = False
-        self.pulse_start_9  = False
-        self.pulse_start_10 = False 
-        self.pulse_start_11 = False
-        self.pulse_start_12 = False
-        self.pulse_start_13 = False
-        self.pulse_start_14 = False
-        self.pulse_start_15 = False
-        self.pulse_start_16 = False
-   
-
-    def check_length(self, 
-                     max_length):
-        ''' Verifies length of window '''
-        for window in self.all_windows:
-            if len(window) < max_length:
-                pass
-            else:
-                window.popleft()
-
-
-    def append_charges(self,
-                       tile_id,
-                       q):
-
-        '''
-            Appending charges to windows
-            - if there's a tile_id match, append q
-            - else append 0
-            tile_count := counter iterating through all tiles
-        '''
-        tile_count = 1 # iterates through all tiles
-        for window in self.all_windows:
-            if tile_count == tile_id:
-                window.append(q)
-            else:
-                window.append(0)
-            
-            tile_count += 1
-    
-        
-    def set_pulse_start(self,
-                        tile_id,
-                        decision):
-        ''' Change the bool value based on tile_id '''
-        try:
-            if tile_id == 1:
-                self.pulse_start_1 = decision
-            elif tile_id == 2:
-                self.pulse_start_2 = decision
-            elif tile_id == 3:
-                self.pulse_start_3 = decision
-            elif tile_id == 4:
-                self.pulse_start_4 = decision
-            elif tile_id == 5:
-                self.pulse_start_5 = decision
-            elif tile_id == 6:
-                self.pulse_start_6 = decision
-            elif tile_id == 7:
-                self.pulse_start_7 = decision
-            elif tile_id == 8:
-                self.pulse_start_8 = decision
-            elif tile_id == 9:
-                self.pulse_start_9 = decision
-            elif tile_id == 10:
-                self.pulse_start_10 = decision
-            elif tile_id == 11:
-                self.pulse_start_11 = decision
-            elif tile_id == 12:
-                self.pulse_start_12 = decision
-            elif tile_id == 13:
-                self.pulse_start_13 = decision
-            elif tile_id == 14:
-                self.pulse_start_14 = decision
-            elif tile_id == 15:
-                self.pulse_start_15 = decision
-            elif tile_id == 16:
-                self.pulse_start_16 = decision
-            
-        except:
-            print('ERROR: NO TILE_ID FOUND')
-
+matplotlib.rcParams['text.usetex'] = True   # for LaTeX font on tile plots
 
 
 class PulseFinder:
     ''' Class for finding pulses within a TPC waveform '''
-    def __init__(self, 
+    def __init__(self,
+                 n,
                  time_step: int,
-         	     q_thresh: int,
-         	     max_q_window_len: int, 
-         	     datalog_file: str,
-         	     geometry_file: str):
+                 q_thresh: float,
+                 max_q_window_len: int,
+                 delta_time_slice: int):
 
-        self.time_step            = time_step         # passed time step
-        self.q_thresh             = q_thresh          # charge threshold
-        self.max_q_window_length  = max_q_window_len  # max charge window length
-        self.q_window             = deque() # initializing tpc1 charge window stack
-        self.hit_count            = 0       # keeps track of hits in event
-        self.event_start_time     = None    # event start time (detector time)
-        self.event_end_time       = None    # event end time (detector time)
-        self.tile                 = None    # tile
-        self.event                = None    # individual event
-        self.hit_ref              = None    # intermediate step
-        self.event_hits           = None    # all hits within event
-        self.candidate_pulses     = None    # candidate pulse storage
-        self.tile_pulses          = None    # pulses for individual tiles
-        self.event_pulses         = None    # pulses for all events
-        self.npulses_on_tiles     = None    # keeps track of how many pulses on a tile occur
+        self.nwindows          = n                    # number of windows/tiles
+        self.time_step         = time_step            # timestep
+        self.q_thresh          = q_thresh             # charge threshold
+        self.max_q_window_len  = max_q_window_len     # maximum length of charge window
+        self.delta_time_slice  = delta_time_slice     # time window for accumulating charge window
 
+        self.event         = None      # analyzed event
+        self.hits          = None      # hits of analyzed event
+        self.event_hits    = None      # hits specific to event
+        self.hit_count     = None      # hit counter for keeping track of iteration
+        self.instile_dict  = None    # dictionary of instiles
 
-    def create_pulse(self, 
-                     tile_id, 
-                     event_id,
-                     event_pulse_array):
-        '''
-            creates Pulse instance with PulseFinder information
-            --> see Pulse dataclass for variable descriptions
-            event_pulse_array contains: 
-            [tile id, hit_id, timestamp, sum of charge in window]
-        '''
-        hit_start_time   = event_pulse_array[0][1]
-        hit_end_time     = event_pulse_array[-1][1]
-        pulse_start_time = event_pulse_array[0][2]
-        pulse_end_time   = event_pulse_array[-1][2]
-        delta_t          = pulse_end_time - pulse_start_time 
-        peak_q           = max(map(lambda q: q[3], event_pulse_array))  
-        total_q          = sum(map(lambda q: q[3], event_pulse_array))
-        temp_array       = np.array(event_pulse_array) 
-        peak_q_index     = np.where(temp_array == peak_q)
-        peak_q_hit_id    = event_pulse_array[peak_q_index[0][0]][1]
-        peak_q_hit       = next(
-                           filter(
-                           lambda hit: hit[0] == peak_q_hit_id, self.event_hits), None)
-        peak_q_hit_x     = peak_q_hit[1]
-        peak_q_hit_y     = peak_q_hit[2]
-        peak_q_hit_ts    = peak_q_hit[3]
-        hit_positions    = [[hit[1], hit[2]] for hit in self.event_hits]
-        pulse_area       = ConvexHull(hit_positions).volume
+        self.event_start_time = None
+        self.event_end_time   = None
+        self.max_time_step    = None   # maximum attainable time slice
         
-        pulse = Pulse(event_id,  
-                      tile_id,
-                      hit_start_time, 
-                      hit_end_time, 
-                      pulse_start_time, 
-                      pulse_end_time, 
-                      delta_t, 
-                      total_q, 
-                      peak_q, 
-                      peak_q_hit_id, 
-                      peak_q_hit_ts, 
-                      peak_q_hit_x, 
-                      peak_q_hit_y, 
-                      pulse_area)
+        self.tile_pulses      = None   # keeps track of npulses on a tile
         
-        if tile_id not in self.tile_pulses:
-            self.tile_pulses[tile_id] = []
+        self.NO_HIT                = -10    # constant for when no hit occurred
+        self.NO_Q                  = 0      # constant for when no charge
+        self.SYNC_PULSE_CONSTRAINT = 8      # ntile value for sync pulse classification
+
+        self.first_hit_at_lsb_index = None
+        self.first_hit_at_lsb_flag = None
+
+
+    def assemble_instile_dict(self):
+        ''' Creates dictionary of charge windows for each tile '''
+        instile_dict = {}
+        for tile in range(1, self.nwindows + 1, 1):
+            instile = Instile(self.max_q_window_len,
+                              self.q_thresh,
+                              tile)
+    
+            instile_dict[tile] = instile
+    
+        return instile_dict
+
+
+    def reinitialize(self):
+        ''' Reinitialization of certain variables '''
+        self.instile_dict     = None
+        self.event_start_time = None
+        self.event_end_time   = None
+        self.time_stamps      = None
+        self.ts               = None
+        self.first_hit_at_lsb_index = 0
+        self.first_hit_at_lsb_flag  = None
+        self.hit_count        = 0
+        self.max_time_step    = 0
         
-        self.tile_pulses[tile_id].append(pulse)
+        self.tile_pulses     = {}
+        self.complete_pulses = {}
+        self.event_pulses    = {}
 
 
-    def inspect_tile_for_pulses(self,
-                                pulse_start,
-                                q_window,
-                                q_thresh,
-                                eqw,
-                                tile_id,
-                                hc):
-
-        ''' Inspect individual tile to see if a pulse was found '''
-        if sum(q_window) > q_thresh and pulse_start == False:
-            # a new pulse was found, 
-            # store as an event pulse
-            eqw.set_pulse_start(tile_id, True)
-            self.candidate_pulses[tile_id] = [[tile_id, self.event_hits[hc][0], self.event_hits[hc][3], sum(q_window)]]
+    def append_charge_and_time(self,
+                               tile_id,
+                               time_stamp,
+                               charge):
+        ''' Appending instile charge and timestamp lists post processing '''
+        self.instile_dict[tile_id].time_stamps.append(time_stamp)
+        self.instile_dict[tile_id].charges.append(charge)
 
 
-        elif sum(q_window) > q_thresh and pulse_start == True:
-            # continuation of a pulse
-            self.candidate_pulses[tile_id].append([tile_id, self.event_hits[hc][0], self.event_hits[hc][3], sum(q_window)])
-
-
-        elif sum(q_window) < q_thresh and pulse_start == True:
-            eqw.set_pulse_start(tile_id, False)
-            # end of a pulse
-            self.create_pulse(tile_id, self.event[0], self.candidate_pulses[tile_id]) 
-            self.npulses_on_tiles[tile_id] += 1
-
-            try:
-                del self.candidate_pulses[tile_id]
-            except:
-                print('CANDIDATE PULSE NOT FOUND')
-
-
-        else:
-            # no pulse was found, do nothing
-            pass
-
-
-
-    def make_pulse_determination(self, 
-                                 eqw,
-                                 hc):
-
-        ''' 
-        Determine if a pulse was found at every charge window 
-        ** currently set up this way so class variables update accordingly,
-          ordinary for loops don't work with the current eqw class set up
-        - eqw = event charge window
-        - hc  = hit count
-        '''
-        self.inspect_tile_for_pulses(eqw.pulse_start_1, eqw.window_1, self.q_thresh, eqw, 1, hc) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_2, eqw.window_2, self.q_thresh, eqw, 2, hc) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_3, eqw.window_3, self.q_thresh, eqw, 3, hc) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_4, eqw.window_4, self.q_thresh, eqw, 4, hc) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_5, eqw.window_5, self.q_thresh, eqw, 5, hc) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_6, eqw.window_6, self.q_thresh, eqw, 6, hc) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_7, eqw.window_7, self.q_thresh, eqw, 7, hc) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_8, eqw.window_8, self.q_thresh, eqw, 8, hc) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_9, eqw.window_9, self.q_thresh, eqw, 9, hc) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_10, eqw.window_10, self.q_thresh, eqw, 10, hc) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_11, eqw.window_11, self.q_thresh, eqw, 11, hc) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_12, eqw.window_12, self.q_thresh, eqw, 12, hc) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_13, eqw.window_13, self.q_thresh, eqw, 13, hc) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_14, eqw.window_14, self.q_thresh, eqw, 14, hc) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_15, eqw.window_15, self.q_thresh, eqw, 15, hc) 
-        self.inspect_tile_for_pulses(eqw.pulse_start_16, eqw.window_16, self.q_thresh, eqw, 16, hc) 
-
-
-    def initialize_candidate_pulses(self):
-        ''' Initialization of necessary criteria '''
-        self.candidate_pulses = {}
-        self.tile_pulses = {}
-        self.npulses_on_tiles  = {i:0 for i in range(1, 16 + 1)}
-
-
-    def make_cut_on_npulses_per_tile(self):
-        ''' Make final cut to ensure this isn't a sync pulse '''
-        nspikes = 20
-        # for redundancy
-        cut_tile_dict = {key:val for key, val in self.npulses_on_tiles.items() if val != 0 and val > nspikes}
-       
-        self.tile_pulses = {key:val for key, val in self.tile_pulses.items() if len(val) > nspikes}
-
-        if len(cut_tile_dict) > 7:
-            pass
-        else:
-            print('o-- potential WTT event at {} --o'.format(self.event[0]))
-            if self.event[0] not in self.event_pulses:
-                self.event_pulses[self.event[0]] = {}
+    def assemble_charge_and_time_lists(self):
+        ''' Assembles instile lists for charge and time for pulse finding '''
+        # iterating through tiles that logged a pulse
+        for tile_id in self.tile_pulses:
             
-            self.event_pulses[self.event[0]] = self.tile_pulses
-    
-    
-    
+            # iterating through all logged pulses
+            for i in range (0, len(self.instile_dict[tile_id].pulse_start_time_stamp), 1):
+                _pulse_start_time = self.instile_dict[tile_id].pulse_start_time_stamp[i]
+                _pulse_end_time   = self.instile_dict[tile_id].pulse_end_time_stamp[i]
+                _hit_index        = self.instile_dict[tile_id].first_hit_at_lsb_index[i]
+                _ts               = _pulse_start_time
+                
+                # iterate until the end of the pulse
+                while _ts < _pulse_end_time:
+                     
+                    if _ts == self.event_hits[_hit_index][3]:
+                        # a match, 
+                        # append charge and associated time stamp to instile deque
+                        self.append_charge_and_time(tile_id,
+                                                    _ts,
+                                                    self.event_hits[_hit_index][4])
+                        _hit_index += 1
+                   
+                    else:
+                        _ts += self.time_step
+
+           
+            # store charges and timestamps stacks into list once completed
+            self.instile_dict[tile_id].store_charges_in_list()
+            self.instile_dict[tile_id].store_time_stamps_in_list()
+
+            # store completed pulses in event per instile
+            if tile_id not in self.complete_pulses:
+                self.complete_pulses[tile_id] = {}
+
+            self.complete_pulses[tile_id] = self.instile_dict[tile_id]
+
+
+    def append_charge_windows(self,
+                              tile_id,
+                              charge):
+        ''' Appends values to charge windows '''
+        for instile in self.instile_dict:
+            if tile_id == instile:
+                self.instile_dict[instile].window.append(charge)
+            else:
+                self.instile_dict[instile].window.append(self.NO_Q)
+
+
+    def clear_instile_windows(self):
+        ''' Clears all instile charge windows '''
+        for instile in self.instile_dict:
+            self.instile_dict[instile].window.clear()
+
+
+    def make_pulse_determination(self):
+        ''' 
+            Determines whether a pulse was found or not, and 
+            stores values accordingly
+        '''
+        for instile in self.instile_dict:
+            _sum_window = sum(self.instile_dict[instile].window)
+            _start_indicator = self.instile_dict[instile].pulse_indicator
+
+            if self.q_thresh < _sum_window and _start_indicator == False:
+                #print('beginning of a pulse was found at tile {}, ts = {}'.format(instile, self.ts))
+                self.instile_dict[instile].set_pulse_indicator(True)
+                self.instile_dict[instile].set_pulse_start_time_stamp(self.ts - self.delta_time_slice)
+                self.instile_dict[instile].set_first_hit_at_lsb_index(self.first_hit_at_lsb_index)  
+                self.instile_dict[instile].increment_npulse_count()
+                
+                # add to tile_pulses to keep track
+                self.tile_pulses[instile] = self.instile_dict[instile].get_npulse_count()
+
+
+            elif self.q_thresh < _sum_window and _start_indicator == True:
+                # do nothing since there's nothing to do
+                pass
+
+
+            elif self.q_thresh > _sum_window and _start_indicator == True:
+                #print('end of a pulse was found at {}, ts = {}'.format(instile, self.ts))
+                self.instile_dict[instile].set_pulse_indicator(False)
+                self.instile_dict[instile].set_pulse_end_time_stamp(self.ts)
+               
+
+
+    def sync_pulse_determination(self):
+        ''' Determine if pulses within an event are related to syncing '''
+        if len(self.tile_pulses) > self.SYNC_PULSE_CONSTRAINT:
+            print('********************************************')
+            print('* event {} is most likely a sync pulse,'.format(self.event[0]))
+            print('* containing {} tiles that had a \'pulse\''.format(len(self.tile_pulses)))
+            print('********************************************')
+        else:
+            print('o-----------------------------------------o')
+            print('event {} does not contain a sync pulse'.format(self.event[0]))
+            print('o-----------------------------------------o')
+            self.assemble_charge_and_time_lists()
+
+
+
     def obtain_event_pulses(self,
                             selection):
-        ''' Finds pulses within cut events '''
-        self.event_start_time = self.event_hits[0][3]
-        self.event_end_time   = self.event_hits[-1][3]
-        ts                    = self.event_start_time
-        event_q_windows       = EventChargeWindows()
-        hit_count = self.hit_count
-        self.initialize_candidate_pulses()
-
-        while ts < self.event_end_time:
-                
-            # validate length of charge windows
-            event_q_windows.check_length(self.max_q_window_length)
+        ''' Attempts to find pulses in an event '''
+        while self.ts < self.event_end_time:
             
-            if ts == self.event_hits[hit_count][3]:
-                # a hit was found, get hit's tile location,
-                # append to stack
-                _tile_id = selection.get_tile_id(self.event_hits[hit_count])
-                event_q_windows.append_charges(_tile_id, 
-                                               abs(self.event_hits[hit_count][4])) 
-                
-                # determine whether there was a pulse at each tile
-                self.make_pulse_determination(event_q_windows, 
-                                              hit_count)
+            # determine max timestep and determine if we'd still be in the
+            # time range of an event
+            self.max_time_step = self.ts + self.delta_time_slice 
 
-                # append hit count since a hit was found
-                hit_count += 1
+            # now iterate through the time slice
+            while self.ts < self.max_time_step:
+             
+                # end case,
+                # ensures a constrained iteration
+                if self.hit_count == len(self.event_hits):
+                    self.ts = self.event_end_time
+                    break
 
-            else:
-                ts += self.time_step
+                # otherwise check if there's a time stamp within time slice
+                if self.ts == self.event_hits[self.hit_count][3]:
+                    # a hit was found within the timing window,
+                    # obtain tile location and append to stack
+                    # -- check if this is the first hit found by lsb
+                    if self.first_hit_at_lsb_flag == False:
+                        self.first_hit_at_lsb_index = self.hit_count
+                        self.first_hit_at_lsb_flag = True
 
-        # analyze pulses on tile dictionary at the end
-        self.make_cut_on_npulses_per_tile()
+                    _tile_id = selection.get_tile_id(self.event_hits[self.hit_count])
+                    _charge  = abs(self.event_hits[self.hit_count][4])
+                    self.append_charge_windows(_tile_id,
+                                               _charge)
+                    self.hit_count += 1 
+
+                else:
+                    self.ts += self.time_step
+
+
+            # once we're out of this loop, THEN we determine if a pulse
+            # is within the time window or not
+            self.make_pulse_determination() 
+            
+            # now clear the stack for the next iteration through time,
+            # since at certain timestamps there can be many, many hits
+            self.clear_instile_windows()
+
+            # reset all hit lsb information
+            self.first_hit_at_lsb_index = 0
+            self.first_hit_at_lsb_flag  = False
+
+        # concluded looping through event,
+        # determine if this was a sync pulse or not
+        self.sync_pulse_determination()
         
 
-
-    def find_pulses(self, 
+    def find_pulses(self,
                     selection):
-        ''' Drives pulse finding '''
+        ''' Main driver of pulse scanning '''
         cut_events = selection.get_cut_events()
         start_time = time.time()
-        self.event_pulses = {}
 
         for evid in cut_events.keys():
             print('evaluating event {}'.format(evid))
+            # initialize and obtain information,
+            # obtain pulses
+            self.reinitialize()
             self.event      = selection.get_event(evid)
             self.event_hits = selection.get_event_hits(self.event)
-            self.obtain_event_pulses(selection) 
+            self.event_start_time = self.event_hits[0][3]
+            self.event_end_time   = self.event_hits[-1][3]
+            self.ts               = self.event_start_time
+            self.instile_dict     = self.assemble_instile_dict() 
             
+            self.obtain_event_pulses(selection)
 
+            if self.complete_pulses:
+                self.event_pulses[evid] = self.complete_pulses 
+                print(self.event_pulses[evid]) 
+
+
+        print(self.event_pulses)
         end_time = time.time()
         print('scan for pulses completed in {} seconds'.format(end_time - start_time))
-        print('all potential WTT events: {}'.format(self.event_pulses.keys()))
-    
-        return self.event_pulses
 
-        ''' Big note:
-            -- Multiple hits can be logged at the same time
-		AKA multiple 'pulses' can be actual hits that are below charge 
-		are logged on the tile, potentially triggering the end of a pulse '''

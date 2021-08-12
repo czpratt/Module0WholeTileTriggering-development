@@ -2,6 +2,8 @@
     Addressing the Whole Tile Triggering problem occuring in the
     Module 0 detector at LBNL
 
+    Version 1.0.0
+
     o--- Contributers ---o
      Christian Pratt: czpratt@ucdavis.edu
      Nicholas Carrara: ncarrara.physics@gmail.com
@@ -20,11 +22,9 @@ from typing import Tuple, List
 from scipy.spatial import ConvexHull
 from collections import deque
 from dataclasses import dataclass
-from tile_plot import *
 from selection import Selection
 from pulse_finder import PulseFinder
 from configuration import Configuration
-from pulse_histograms import *
 
 
 if __name__ == '__main__':
@@ -45,9 +45,6 @@ if __name__ == '__main__':
                         default=None,
                         help='cut for number of hits on a tile') 
 
-    parser.add_argument('--plot_histogram', action='store_true', default=False)
-
-
     args  = parser.parse_args()
    
     if not args.nhits_cut:
@@ -67,18 +64,16 @@ if __name__ == '__main__':
         print(selection)
      
     ''' Obtain pulses from nhit cut events '''
+    n                = 16
     time_step        = 1
-    q_thresh         = float(1000)
-    max_q_window_len = 10
-    pulse_finder = PulseFinder(time_step,
+    delta_time_slice = 50
+    q_thresh         = float(5000)
+    max_q_window_len = delta_time_slice
+
+    pulse_finder = PulseFinder(n,
+                               time_step,
                                q_thresh, 
                                max_q_window_len,
-                               args.datalog_file, 
-                               args.geometry_file)
+                               delta_time_slice)
 
-    pulses = pulse_finder.find_pulses(selection)
-    
-    make_pulse_histograms(selection,
-                          pulses,
-                          args.plot_histogram)
-
+    pulse_finder.find_pulses(selection)
