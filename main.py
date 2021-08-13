@@ -18,33 +18,42 @@ import time
 import yaml
 import argparse
 import matplotlib
+
 from typing import Tuple, List
 from scipy.spatial import ConvexHull
 from collections import deque
 from dataclasses import dataclass
+
+from tile_plot import *
+from display_pulses import *
 from selection import Selection
 from pulse_finder import PulseFinder
 from configuration import Configuration
 
+matplotlib.rcParams['text.usetex'] = True
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='output event information')
     parser.add_argument('--datalog_file',
-                        metavar='FILE',
+                        metavar='DATALOG FILE',
                         type=str,
                         help='datalog file of the form (...)_CESTevd.h5')
 
     parser.add_argument('--geometry_file',
-                        metavar='FILE',
+                        metavar='GEOMETRY FILE',
                         type=str,
                         help='yaml file specifying the geometry')
     
     parser.add_argument('--nhits_cut',
-                        metavar='NHITS CUT',
+                        metavar='NHITS CUT VALUE',
                         type=int,
                         default=None,
                         help='cut for number of hits on a tile') 
 
+    parser.add_argument('--display_pulses',
+                        action='store_true',
+                        default=False)
+    
     args  = parser.parse_args()
    
     if not args.nhits_cut:
@@ -62,12 +71,12 @@ if __name__ == '__main__':
     
     if args.nhits_cut:
         print(selection)
-     
+    
     ''' Obtain pulses from nhit cut events '''
     n                = 16
     time_step        = 1
     delta_time_slice = 50
-    q_thresh         = float(5000)
+    q_thresh         = float(50000)
     max_q_window_len = delta_time_slice
 
     pulse_finder = PulseFinder(n,
@@ -76,4 +85,13 @@ if __name__ == '__main__':
                                max_q_window_len,
                                delta_time_slice)
 
-    pulse_finder.find_pulses(selection)
+    event_pulses = pulse_finder.find_pulses(selection)
+
+    print('event_pulses: {}'.format(event_pulses))
+    
+    ''' Display pulse information '''
+    if args.display_pulses:
+        display(event_pulses,
+                q_thresh,
+                delta_time_slice)
+        
