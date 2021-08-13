@@ -73,11 +73,11 @@ which is how an Instile's information will be updated throughout the pulse findi
 
 ```
     {evid_1: {tile_id_1: Instile,
-            tile_id_2: Instile,
-            ...},
+              tile_id_2: Instile,
+              ...},
      evid_2: {tile_id_3: Instile,
-             tile_id_4: Instile,
-             ...},
+              tile_id_4: Instile,
+              ...},
      ...
     }
 ```
@@ -85,7 +85,7 @@ This will be useful when plotting utility functions are utilized in the post-pro
 
 - `instile.py`: Class file for an Instile
 
-- `display_pulses`: Plotting utilities for pulses (currently function based)
+- `display_pulses`: Post-processing plotting utilities for pulses (currently function based)
 
 - `tile_plot.py`: Plotting functionality
 
