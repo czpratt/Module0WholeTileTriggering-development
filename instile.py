@@ -11,11 +11,13 @@ class Instile:
     def __init__(self,
                  max_q_window_len: int,
                  q_thresh: float,
-                 tile_id: int):
+                 tile_id: int,
+                 evid: int):
                  
         self.max_q_window_len = max_q_window_len
         self.q_thresh         = q_thresh
         self.tile_id          = tile_id
+        self.evid             = evid
 
         self.window          = None     # charge window
         self.pulse_indicator = None     # indicator for the start of a pulse 
@@ -26,7 +28,10 @@ class Instile:
         self.charges      = None     # list of charges from hits
         self.time_stamps  = None     # list of time stamps of hits
         self.histogram    = None     # placeholder for tile histogram
-        self.npulse_count = None
+        self.npulse_count = None     # counts number of pulses on the tile
+        
+        self.charges_list       = None
+        self.time_stamps_list   = None
 
         self.first_hit_at_lsb_index = None
 
@@ -51,8 +56,15 @@ class Instile:
 
     def __repr__(self):
         ''' String representation function '''
-        return ('start times = {}, end times = {}\n'.format(self.pulse_start_time_stamp,
-                                                            self.pulse_end_time_stamp))
+        return (' evid = {}, tile_id = {}, npulse_count = {}, \n\
+start times = {}, end times = {}, len(charges_list) = {}, len(time_stamps_list) = {}\n'.format(
+                                self.evid,
+                                self.tile_id,
+                                self.npulse_count,
+                                self.pulse_start_time_stamp,
+                                self.pulse_end_time_stamp,
+                                len(self.charges_list),
+                                len(self.time_stamps_list)))
    
 
     def set_pulse_start_time_stamp(self,
@@ -65,7 +77,6 @@ class Instile:
                                  pulse_end_time):
         ''' Start time of the pulse '''
         self.pulse_end_time_stamp.append(pulse_end_time)
-
 
 
     def set_pulse_indicator(self,
@@ -83,7 +94,6 @@ class Instile:
     def store_charges_in_list(self):
         ''' Store individual stacks to handle multiple hits '''
         self.charges_list.append(self.charges)
-    
     
     def store_time_stamps_in_list(self):
         ''' Store individual stacks to handle multiple hits '''

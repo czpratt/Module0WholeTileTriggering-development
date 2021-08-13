@@ -40,15 +40,18 @@ class PulseFinder:
         self.event_end_time   = None
         self.max_time_step    = None   # maximum attainable time slice
         
+        self.complete_pulses  = None   # complete pulse
         self.tile_pulses      = None   # keeps track of npulses on a tile
-        
+        self.event_pulses     = {}
+
         self.NO_HIT                = -10    # constant for when no hit occurred
         self.NO_Q                  = 0      # constant for when no charge
         self.SYNC_PULSE_CONSTRAINT = 8      # ntile value for sync pulse classification
 
         self.first_hit_at_lsb_index = None
         self.first_hit_at_lsb_flag = None
-
+    
+       
 
     def assemble_instile_dict(self):
         ''' Creates dictionary of charge windows for each tile '''
@@ -56,7 +59,8 @@ class PulseFinder:
         for tile in range(1, self.nwindows + 1, 1):
             instile = Instile(self.max_q_window_len,
                               self.q_thresh,
-                              tile)
+                              tile,
+                              self.event[0])
     
             instile_dict[tile] = instile
     
@@ -77,7 +81,6 @@ class PulseFinder:
         
         self.tile_pulses     = {}
         self.complete_pulses = {}
-        self.event_pulses    = {}
 
 
     def append_charge_and_time(self,
@@ -109,16 +112,15 @@ class PulseFinder:
                         # append charge and associated time stamp to instile deque
                         self.append_charge_and_time(tile_id,
                                                     _ts,
-                                                    self.event_hits[_hit_index][4])
+                                                    abs(self.event_hits[_hit_index][4]))
                         _hit_index += 1
                    
                     else:
                         _ts += self.time_step
 
-           
-            # store charges and timestamps stacks into list once completed
-            self.instile_dict[tile_id].store_charges_in_list()
-            self.instile_dict[tile_id].store_time_stamps_in_list()
+                # store charges and timestamps stacks into list once completed
+                self.instile_dict[tile_id].store_charges_in_list()
+                self.instile_dict[tile_id].store_time_stamps_in_list()
 
             # store completed pulses in event per instile
             if tile_id not in self.complete_pulses:
@@ -133,7 +135,7 @@ class PulseFinder:
         ''' Appends values to charge windows '''
         for instile in self.instile_dict:
             if tile_id == instile:
-                self.instile_dict[instile].window.append(charge)
+                self.instile_dict[instile].window.append(abs(charge))
             else:
                 self.instile_dict[instile].window.append(self.NO_Q)
 
@@ -154,7 +156,7 @@ class PulseFinder:
             _start_indicator = self.instile_dict[instile].pulse_indicator
 
             if self.q_thresh < _sum_window and _start_indicator == False:
-                #print('beginning of a pulse was found at tile {}, ts = {}'.format(instile, self.ts))
+                print('beginning of a pulse was found at tile {}, ts = {}'.format(instile, self.ts))
                 self.instile_dict[instile].set_pulse_indicator(True)
                 self.instile_dict[instile].set_pulse_start_time_stamp(self.ts - self.delta_time_slice)
                 self.instile_dict[instile].set_first_hit_at_lsb_index(self.first_hit_at_lsb_index)  
@@ -170,7 +172,7 @@ class PulseFinder:
 
 
             elif self.q_thresh > _sum_window and _start_indicator == True:
-                #print('end of a pulse was found at {}, ts = {}'.format(instile, self.ts))
+                print('end of a pulse was found at {}, ts = {}'.format(instile, self.ts))
                 self.instile_dict[instile].set_pulse_indicator(False)
                 self.instile_dict[instile].set_pulse_end_time_stamp(self.ts)
                
@@ -265,12 +267,13 @@ class PulseFinder:
             
             self.obtain_event_pulses(selection)
 
+            # if complete pulses is non-empty, store
             if self.complete_pulses:
                 self.event_pulses[evid] = self.complete_pulses 
-                print(self.event_pulses[evid]) 
+            else:
+                pass
 
-
-        print(self.event_pulses)
         end_time = time.time()
         print('scan for pulses completed in {} seconds'.format(end_time - start_time))
 
+        return self.event_pulses
