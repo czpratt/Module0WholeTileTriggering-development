@@ -2,6 +2,7 @@ from collections import deque
 from collections import Counter
 from dataclasses import dataclass
 from scipy.spatial import ConvexHull
+
 import time
 import numpy as np
 import argparse
@@ -14,7 +15,6 @@ from selection import Selection
 
 matplotlib.rcParams['text.usetex'] = True   # for LaTeX font on tile plots
 
-
 class PulseFinder:
     ''' Class for finding pulses within a TPC waveform '''
     def __init__(self,
@@ -24,20 +24,20 @@ class PulseFinder:
                  max_q_window_len: int,
                  delta_time_slice: int):
 
-        self.nwindows          = n                    # number of windows/tiles
-        self.time_step         = time_step            # timestep
-        self.q_thresh          = q_thresh             # charge threshold
-        self.max_q_window_len  = max_q_window_len     # maximum length of charge window
-        self.delta_time_slice  = delta_time_slice     # time window for accumulating charge window
+        self.nwindows          = n                 # number of windows/tiles
+        self.time_step         = time_step         # timestep
+        self.q_thresh          = q_thresh          # charge threshold
+        self.max_q_window_len  = max_q_window_len  # maximum length of charge window
+        self.delta_time_slice  = delta_time_slice  # time window for accumulating charge window
 
         self.event         = None      # analyzed event
         self.hits          = None      # hits of analyzed event
         self.event_hits    = None      # hits specific to event
         self.hit_count     = None      # hit counter for keeping track of iteration
-        self.instile_dict  = None    # dictionary of instiles
+        self.instile_dict  = None      # dictionary of instiles
 
-        self.event_start_time = None
-        self.event_end_time   = None
+        self.event_start_time = None   # event start time
+        self.event_end_time   = None   # event end time
         self.max_time_step    = None   # maximum attainable time slice
         
         self.complete_pulses  = None   # complete pulse
@@ -48,9 +48,8 @@ class PulseFinder:
         self.NO_Q                  = 0      # constant for when no charge
         self.SYNC_PULSE_CONSTRAINT = 8      # ntile value for sync pulse classification
 
-        self.first_hit_at_lsb_index = None
-        self.first_hit_at_lsb_flag = None
-    
+        self.first_hit_at_lsb_index = None  # index of the first hit at logged lsb
+        self.first_hit_at_lsb_flag = None   # flag indicating whether the index has been logged
        
 
     def assemble_instile_dict(self):
@@ -93,7 +92,13 @@ class PulseFinder:
 
 
     def assemble_charge_and_time_lists(self):
-        ''' Assembles instile lists for charge and time for pulse finding '''
+        ''' 
+            Assembles instile lists for charge and time for pulse finding
+            NOTES:
+                1) this function is similar to obtain_event_pulses,
+                   but not the same, and is necessary to keep seperate
+                   in the scenario that there wasn\'t a sync pulse 
+        '''
         # iterating through tiles that logged a pulse
         for tile_id in self.tile_pulses:
             
@@ -116,6 +121,7 @@ class PulseFinder:
                         _hit_index += 1
                    
                     else:
+                        # no hit at this timestamp, advance
                         _ts += self.time_step
 
                 # store charges and timestamps stacks into list once completed
@@ -151,28 +157,32 @@ class PulseFinder:
             Determines whether a pulse was found or not, and 
             stores values accordingly
         '''
+        # iterate through all instiles
         for instile in self.instile_dict:
             _sum_window = sum(self.instile_dict[instile].window)
             _start_indicator = self.instile_dict[instile].pulse_indicator
-
+            
+            # check if the beginning of a pulse was found
             if self.q_thresh < _sum_window and _start_indicator == False:
-                print('beginning of a pulse was found at tile {}, ts = {}'.format(instile, self.ts))
+                # found ==> set necessary variables,
+                # log time stamp and increase npulse count
                 self.instile_dict[instile].set_pulse_indicator(True)
                 self.instile_dict[instile].set_pulse_start_time_stamp(self.ts - self.delta_time_slice)
                 self.instile_dict[instile].set_first_hit_at_lsb_index(self.first_hit_at_lsb_index)  
                 self.instile_dict[instile].increment_npulse_count()
                 
-                # add to tile_pulses to keep track
+                # add incremented npulse count back to instile
                 self.tile_pulses[instile] = self.instile_dict[instile].get_npulse_count()
 
-
+            
+            # check if a pulse is continuing
             elif self.q_thresh < _sum_window and _start_indicator == True:
-                # do nothing since there's nothing to do
+                # do nothing for the continuation of a pulse
                 pass
 
-
+            # check if the end of a pulse was found
             elif self.q_thresh > _sum_window and _start_indicator == True:
-                print('end of a pulse was found at {}, ts = {}'.format(instile, self.ts))
+                # found ==> set necessary variables and log time stamp
                 self.instile_dict[instile].set_pulse_indicator(False)
                 self.instile_dict[instile].set_pulse_end_time_stamp(self.ts)
                
@@ -187,35 +197,32 @@ class PulseFinder:
             print('********************************************')
         else:
             print('o-----------------------------------------o')
-            print('event {} does not contain a sync pulse'.format(self.event[0]))
+            print('event {} DOES NOT contain a sync pulse'.format(self.event[0]))
             print('o-----------------------------------------o')
             self.assemble_charge_and_time_lists()
-
 
 
     def obtain_event_pulses(self,
                             selection):
         ''' Attempts to find pulses in an event '''
+        # iterating through an event
         while self.ts < self.event_end_time:
             
-            # determine max timestep and determine if we'd still be in the
-            # time range of an event
+            # determine max timestep for iteration,
+            # and iterate through the time slice
             self.max_time_step = self.ts + self.delta_time_slice 
-
-            # now iterate through the time slice
             while self.ts < self.max_time_step:
              
-                # end case,
-                # ensures a constrained iteration
+                # end case ==> ensures a constrained iteration
                 if self.hit_count == len(self.event_hits):
                     self.ts = self.event_end_time
                     break
 
-                # otherwise check if there's a time stamp within time slice
+                # otherwise, check if there's a time stamp within time slice
                 if self.ts == self.event_hits[self.hit_count][3]:
                     # a hit was found within the timing window,
                     # obtain tile location and append to stack
-                    # -- check if this is the first hit found by lsb
+                    # -- first, check if this is the first hit found by lsb
                     if self.first_hit_at_lsb_flag == False:
                         self.first_hit_at_lsb_index = self.hit_count
                         self.first_hit_at_lsb_flag = True
@@ -242,7 +249,7 @@ class PulseFinder:
             self.first_hit_at_lsb_index = 0
             self.first_hit_at_lsb_flag  = False
 
-        # concluded looping through event,
+        # concluded looping through an event,
         # determine if this was a sync pulse or not
         self.sync_pulse_determination()
         

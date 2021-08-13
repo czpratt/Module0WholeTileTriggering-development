@@ -20,7 +20,8 @@ def plot_pulse_histogram(instile,
     _nbins       = None
     bin_width    = 10
     
-    # iterate through the number of pulses stored by the instile
+    # iterate through the number of pulses stored by the instile,
+    # and plot histogram
     for i in range(0, instile.npulse_count, 1):
         _time_stamps = list(instile.time_stamps_list[i])
         _charges     = list(instile.charges_list[i])

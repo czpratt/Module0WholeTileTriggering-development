@@ -18,6 +18,7 @@ import time
 import yaml
 import argparse
 import matplotlib
+
 from typing import Tuple, List
 from scipy.spatial import ConvexHull
 from collections import deque
@@ -87,7 +88,8 @@ if __name__ == '__main__':
     event_pulses = pulse_finder.find_pulses(selection)
 
     print('event_pulses: {}'.format(event_pulses))
-
+    
+    ''' Display pulse information '''
     if args.display_pulses:
         display(event_pulses,
                 q_thresh,

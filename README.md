@@ -43,8 +43,7 @@ To run the driver code of the investigation:
 
 - `configuration.py`: Handles tile layout information directly from passed `.yaml` file 
 
-- `selection.py`: Obtains information from a passed datalog file
-  If a cut on the number of hits per tile per event is specified, a dictionary is returned that is formatted as:
+- `selection.py`: Obtains information from a passed datalog file. If a cut on the number of hits per tile per event is specified, a dictionary is returned that is formatted as:
   ```
     {evid_1: {tile_id_1: nhits_1, tile_id_2: nhits_2, ...},
      evid_2: {tile_id_1: nhits_1, ...}
@@ -55,7 +54,7 @@ The events that satisfy the cut will be utilized to find potential pulses, a sho
 
 - `pulse_finder.py`: Finds pulses from specified events is made from the dictionary obtained by `selection.py`. The pulse finding algorithm attempts to find pulses based on the amount of charge deposited on a tile for a given time slot. 
 
-The implementation of an Instile (*IN*formation *S*torage of a *TILE* ==> pronounced 'In-still') enables easier pulse data storage, including their associated charge windows, start/end times, lists needed for histogram plotting, etc., as well as making it easier for additional things to keep track of to potentially be added in the future (e.g. list of hit id's) 
+The implementation of an Instile (**IN**formation **S**torage of a **TILE** ==> said 'In-still') enables easier pulse data storage, including their associated charge windows, start/end times, lists needed for histogram plotting, etc., as well as making it easier for additional things to keep track of to potentially be added in the future (e.g. list of hit id's) 
 
 The algorithm implements sixteen Instiles whose charge windows will simultaneously iterate in time scanning each tile for pulses within a specific time slice. The current criteria for a pulse is the following:
 
@@ -96,6 +95,6 @@ This will be useful when plotting utility functions are utilized in the post-pro
 
 ### Active Contributers ###
 
-* Nicholas Carrara, Postdoctoral Researcher, UC Davis
 * Christian Pratt, Graduate Student, UC Davis
+* Nicholas Carrara, Postdoctoral Researcher, UC Davis
 * Jacob Steenis, Graduate Student, UC Davis
