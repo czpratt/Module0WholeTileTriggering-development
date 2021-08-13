@@ -22,18 +22,17 @@ class Instile:
         self.window          = None     # charge window
         self.pulse_indicator = None     # indicator for the start of a pulse 
         
-        self.pulse_start_time_stamp = None
-        self.pulse_end_time_stamp   = None
+        self.pulse_start_time_stamp = None  # start times of a pulse
+        self.pulse_end_time_stamp   = None  # end times of a pulse
 
         self.charges      = None     # list of charges from hits
         self.time_stamps  = None     # list of time stamps of hits
-        self.histogram    = None     # placeholder for tile histogram
         self.npulse_count = None     # counts number of pulses on the tile
         
-        self.charges_list       = None
-        self.time_stamps_list   = None
+        self.charges_list       = None  # list of all charges on a tile from a pulse
+        self.time_stamps_list   = None  # list of all time stamps on a tile from a pulse
 
-        self.first_hit_at_lsb_index = None
+        self.first_hit_at_lsb_index = None # index of the first hit occuring at the LSB
 
         self.startup()
     
