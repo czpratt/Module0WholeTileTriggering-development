@@ -76,7 +76,8 @@ if __name__ == '__main__':
     n                = 16
     time_step        = 1
     delta_time_slice = 50
-    q_thresh         = float(50000)
+    #q_thresh         = float(50000)
+    q_thresh = 10000
     max_q_window_len = delta_time_slice
 
     pulse_finder = PulseFinder(n,
@@ -91,7 +92,8 @@ if __name__ == '__main__':
     
     ''' Display pulse information '''
     if args.display_pulses:
-        display(event_pulses,
+        display(selection,
+                event_pulses,
                 q_thresh,
                 delta_time_slice)
         
