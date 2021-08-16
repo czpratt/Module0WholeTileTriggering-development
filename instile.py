@@ -33,7 +33,7 @@ class Instile:
         self.time_stamps_list   = None  # list of all time stamps on a tile from a pulse
 
         self.first_hit_at_lsb_index = None # index of the first hit occuring at the LSB
-        self.last_hit_at_lsb_index  = None
+        self.last_hit_at_lsb_index  = None # index of last hit occuring at LSB
 
         self.startup()
     
