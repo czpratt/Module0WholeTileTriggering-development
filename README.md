@@ -32,10 +32,6 @@ To run the driver code of the investigation:
 
 ### Upcoming implementations ###
 
-* Refinement of parameter values for
-    1. threshold for number of hits per tile per event
-    2. maximum pulse width with respect to 'sliding' charge window
-* More plotting utilities (3D functionality, etc)
 * Implementing more indicators for whole tile triggering identification
 * More documentation
 
