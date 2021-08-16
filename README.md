@@ -10,7 +10,7 @@ This repository functions as the current codebase for investigating the whole ti
 To run the driver code of the investigation:
 
 1. Clone the repository
-2. Run `python3 main.py --datalog_file={datalog file} --geometry_file={tile layout file}`, where you can download a [datalog file](https://portal.nersc.gov/project/dune/data/Module0/TPC1+2/dataRuns/evdData/) (it is currently optimal to download any file > 200Mb) and a [tile layout file](https://portal.nersc.gov/project/dune/data/Module0/) (current version: `multi_tile_layout-2.1.16.yaml`)
+2. Run `python3 main.py --datalog_file={datalog file} --geometry_file={tile layout file} --nhits_cut={}`, where you can download a [datalog file](https://portal.nersc.gov/project/dune/data/Module0/TPC1+2/dataRuns/evdData/) (it is currently optimal to download any file > 200Mb) and a [tile layout file](https://portal.nersc.gov/project/dune/data/Module0/) (current version: `multi_tile_layout-2.1.16.yaml`)
 
 ### Current Project Roadmap ###
 
