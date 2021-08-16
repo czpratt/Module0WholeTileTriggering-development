@@ -33,6 +33,7 @@ class Instile:
         self.time_stamps_list   = None  # list of all time stamps on a tile from a pulse
 
         self.first_hit_at_lsb_index = None # index of the first hit occuring at the LSB
+        self.last_hit_at_lsb_index  = None # index of last hit occuring at LSB
 
         self.startup()
     
@@ -49,6 +50,7 @@ class Instile:
         self.pulse_start_time_stamp = []
         self.pulse_end_time_stamp   = []
         self.first_hit_at_lsb_index = []
+        self.last_hit_at_lsb_index  = []
         self.charges_list           = []
         self.time_stamps_list       = []
 
@@ -56,14 +58,17 @@ class Instile:
     def __repr__(self):
         ''' String representation function '''
         return (' evid = {}, tile_id = {}, npulse_count = {}, \n\
-start times = {}, end times = {}, len(charges_list) = {}, len(time_stamps_list) = {}\n'.format(
+start times = {}, end times = {}, len(charges_list) = {}, len(time_stamps_list) = {}\n\
+first_hit_index = {}, last_hit_index = {}\n'.format(
                                 self.evid,
                                 self.tile_id,
                                 self.npulse_count,
                                 self.pulse_start_time_stamp,
                                 self.pulse_end_time_stamp,
                                 len(self.charges_list),
-                                len(self.time_stamps_list)))
+                                len(self.time_stamps_list),
+                                self.first_hit_at_lsb_index,
+                                self.last_hit_at_lsb_index))
    
 
     def set_pulse_start_time_stamp(self,
@@ -86,14 +91,21 @@ start times = {}, end times = {}, len(charges_list) = {}, len(time_stamps_list) 
    
     def set_first_hit_at_lsb_index(self,
                                    first_hit_at_lsb_index):
-        ''' Sets the index of the hit at lsb '''
+        ''' Sets the index of the first hit at lsb '''
         self.first_hit_at_lsb_index.append(first_hit_at_lsb_index)
+   
+
+    def set_last_hit_at_lsb_index(self,
+                                  last_hit_at_lsb_index):
+        ''' Sets the index of the last hit at lsb '''
+        self.last_hit_at_lsb_index.append(last_hit_at_lsb_index)
 
     
     def store_charges_in_list(self):
         ''' Store individual stacks to handle multiple hits '''
         self.charges_list.append(self.charges)
-    
+   
+
     def store_time_stamps_in_list(self):
         ''' Store individual stacks to handle multiple hits '''
         self.time_stamps_list.append(self.time_stamps)
