@@ -50,9 +50,7 @@ class PulseFinder:
 
         self.first_hit_at_lsb_index = None  # index of the first hit at logged lsb
         self.first_hit_at_lsb_flag = None   # flag indicating whether the index has been logged
-      
-        self.last_hit_at_lsb_index = None
-
+       
 
     def assemble_instile_dict(self):
         ''' Creates dictionary of charge windows for each tile '''
@@ -75,11 +73,8 @@ class PulseFinder:
         self.event_end_time   = None
         self.time_stamps      = None
         self.ts               = None
-        
         self.first_hit_at_lsb_index = 0
-        self.first_hit_at_lsb_flag  = False
-        self.last_hit_at_lsb_index  = 0
-        
+        self.first_hit_at_lsb_flag  = None
         self.hit_count        = 0
         self.max_time_step    = 0
         
@@ -190,12 +185,7 @@ class PulseFinder:
                 # found ==> set necessary variables and log time stamp
                 self.instile_dict[instile].set_pulse_indicator(False)
                 self.instile_dict[instile].set_pulse_end_time_stamp(self.ts)
-                
-                self.last_hit_at_lsb_index = self.hit_count
-                print('{}, {}, {}'.format(self.instile_dict[instile].first_hit_at_lsb_index,
-                                          self.last_hit_at_lsb_index,
-                                          len(self.event_hits)))
-                self.instile_dict[instile].set_last_hit_at_lsb_index(self.last_hit_at_lsb_index)
+               
 
 
     def sync_pulse_determination(self):
