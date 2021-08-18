@@ -44,14 +44,15 @@ class PulseFinder:
         self.tile_pulses      = None   # keeps track of npulses on a tile
         self.event_pulses     = {}
 
-        self.NO_HIT                = -10    # constant for when no hit occurred
-        self.NO_Q                  = 0      # constant for when no charge
-        self.SYNC_PULSE_CONSTRAINT = 8      # ntile value for sync pulse classification
+        self.NO_HIT                 = -10   # constant for when no hit occurred
+        self.NO_Q                   = 0     # constant for when no charge
+        self.SYNC_PULSE_CONSTRAINT  = 8     # ntile value for sync pulse classification
+        self.MAX_SLIDING_WINDOW_LEN = 5     # max length of sliding window
 
         self.first_hit_at_lsb_index = None  # index of the first hit at logged lsb
         self.first_hit_at_lsb_flag = None   # flag indicating whether the index has been logged
       
-        self.last_hit_at_lsb_index = None
+        self.last_hit_at_lsb_index = None   # last hit logged according to lsb
 
 
     def assemble_instile_dict(self):
@@ -152,10 +153,24 @@ class PulseFinder:
 
 
     def clear_instile_windows(self):
-        ''' Clears all instile charge windows '''
+        ''' Clears all instile charge accumulation windows '''
         for instile in self.instile_dict:
             self.instile_dict[instile].window.clear()
 
+    
+    def manage_sliding_charge_window(self,
+                                     instile_id,
+                                     sum_window):
+        ''' Popping / appending sum(window) to sliding_charge_window '''
+        if len(self.instile_dict[instile_id].sliding_charge_window) > self.MAX_SLIDING_WINDOW_LEN:
+            # pop left
+            self.instile_dict[instile_id].sliding_charge_window.popleft()
+        else:
+            pass
+
+        self.instile_dict[instile_id].sliding_charge_window.append(sum_window)
+
+    
 
     def make_pulse_determination(self):
         ''' 
@@ -166,9 +181,16 @@ class PulseFinder:
         for instile in self.instile_dict:
             _sum_window = sum(self.instile_dict[instile].window)
             _start_indicator = self.instile_dict[instile].pulse_indicator
+
+            self.manage_sliding_charge_window(instile, 
+                                              _sum_window)
             
+            # use the sum of charge FIFO stack to determine if pulse occurred
+            _sum_sliding_charge_window = sum(self.instile_dict[instile].sliding_charge_window)
+            
+
             # check if the beginning of a pulse was found
-            if self.q_thresh < _sum_window and _start_indicator == False:
+            if self.q_thresh < _sum_sliding_charge_window and _start_indicator == False:
                 # found ==> set necessary variables,
                 # log time stamp and increase npulse count
                 self.instile_dict[instile].set_pulse_indicator(True)
@@ -181,20 +203,18 @@ class PulseFinder:
 
             
             # check if a pulse is continuing
-            elif self.q_thresh < _sum_window and _start_indicator == True:
+            elif self.q_thresh < _sum_sliding_charge_window and _start_indicator == True:
                 # do nothing for the continuation of a pulse
                 pass
 
+
             # check if the end of a pulse was found
-            elif self.q_thresh > _sum_window and _start_indicator == True:
+            elif self.q_thresh > _sum_sliding_charge_window and _start_indicator == True:
                 # found ==> set necessary variables and log time stamp
                 self.instile_dict[instile].set_pulse_indicator(False)
                 self.instile_dict[instile].set_pulse_end_time_stamp(self.ts)
                 
                 self.last_hit_at_lsb_index = self.hit_count
-                print('{}, {}, {}'.format(self.instile_dict[instile].first_hit_at_lsb_index,
-                                          self.last_hit_at_lsb_index,
-                                          len(self.event_hits)))
                 self.instile_dict[instile].set_last_hit_at_lsb_index(self.last_hit_at_lsb_index)
 
 
