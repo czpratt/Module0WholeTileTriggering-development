@@ -1,7 +1,7 @@
 '''
 
     Script for plotting functionality for pulse information
-
+    ==> IN PROGRESS
 '''
 import math
 import matplotlib
@@ -12,22 +12,26 @@ from selection import Selection
 
 matplotlib.rcParams['text.usetex'] = True
 
-
 def plot_pulse_histogram(instile,
                          q_thresh,
                          delta_time_slice):
     ''' Plotting histogram of a pulse '''
     _time_stamps = None
     _charges     = None
-    _nbins       = None
-    bin_width    = 10
-    
+    _nbins       = 100
+
     # iterate through the number of pulses stored by the instile,
     # and plot histogram
     for i in range(0, instile.npulse_count, 1):
         _time_stamps = list(instile.time_stamps_list[i])
         _charges     = list(instile.charges_list[i])
-        _nbins       = math.ceil(len(_charges) / bin_width)
+       
+        
+        _start_time = _time_stamps[0]
+        _end_time = _time_stamps[-1]
+        _nbins_ = int(_end_time - _start_time)
+        _nbins = int(_nbins_ / delta_time_slice)
+
         fig, axs = plt.subplots()
         axs.hist(_time_stamps,
                  weights=_charges,
@@ -57,14 +61,16 @@ def plot_event_charge_vs_hid(selection,
     # first lets do it for the whole event
     _charges = [] # list for obtaining charges
     _hids    = []
-    
+   
+    _nbins = 200
+    tile_of_choice = 12
+
     # get list of charges for whole event
     for i in range(len(_event_hits)):
-        _charges.append(_event_hits[i][4])
-        _hids.append(i)
-
-    bin_width = 10
-    _nbins = math.ceil(len(_charges) / bin_width)
+        tile_id = selection.get_tile_id(_event_hits[i])
+        if tile_id == tile_of_choice:
+            _charges.append(_event_hits[i][4])
+            _hids.append(i)
 
     fig, axs = plt.subplots()
     axs.hist(_hids,
@@ -73,7 +79,9 @@ def plot_event_charge_vs_hid(selection,
             histtype='step',
             label='binned')
 
-    _title = 'Event {} Charge vs. Hit ID'.format(evid)
+    _title = 'Event {}, Tile {}: Charge vs. Hit ID, nbins = {}'.format(evid, 
+                                                                       tile_of_choice,
+                                                                       _nbins)
     axs.set_title(r'{}'.format(_title))
     axs.set_xlabel(r'Hit ID')
     axs.set_ylabel(r'charge [1000 * $10^3$ e]')
@@ -84,7 +92,8 @@ def plot_event_charge_vs_hid(selection,
 def plot_pulse_charge_vs_hid(selection,
                              instile,
                              evid,
-                             tile_id):
+                             tile_id,
+                             delta_time_slice):
     ''' Plotting specific pulse charge vs hid ''' 
     _event_hits = selection.get_event_hits(selection.get_event(evid))
 
@@ -97,15 +106,20 @@ def plot_pulse_charge_vs_hid(selection,
         _hit_start = instile.first_hit_at_lsb_index[pulse]
         _hit_end   = instile.last_hit_at_lsb_index[pulse]
 
+        _time_stamps = list(instile.time_stamps_list[pulse])
+        
+        _start_time = _time_stamps[0]
+        _end_time = _time_stamps[-1]
+        _nbins = int(_end_time - _start_time)
+        #_nbins = int(_nbins_ / delta_time_slice)
+        
         for hit_count in range(_hit_start, _hit_end + 1, 1):
             _tile_id = selection.get_tile_id(_event_hits[hit_count]) 
             
             if _tile_id == tile_id:
                 _charges.append(_event_hits[hit_count][4])
                 _hids.append(hit_count)
-        
-        bin_width = 10
-        _nbins = math.ceil(len(_hids) / bin_width)
+
 
         fig, axs = plt.subplots()
         axs.hist(_hids,
@@ -114,8 +128,9 @@ def plot_pulse_charge_vs_hid(selection,
                 histtype='step',
                 label='binned')
 
-        _title = 'Event {}, Tile {}: Charge vs. Hit ID'.format(evid,
-                                                               tile_id)
+        _title = 'Event {}, Tile {}: Charge vs. Hit ID, nbins = {}'.format(evid,
+                                                                           tile_id,
+                                                                           _nbins)
         axs.set_title(r'{}'.format(_title))
         axs.set_xlabel(r'Hit ID')
         axs.set_ylabel(r'charge [1000 * $10^3$ e]')
@@ -145,15 +160,14 @@ def display(selection,
             _instile = event_pulses[evid][tile_id]
             
             # display pulse charge vs hid plot
-            '''
             plot_pulse_charge_vs_hid(selection,
                                      _instile,
                                      evid,
-                                     tile_id)
-            '''
+                                     tile_id,
+                                     delta_time_slice)
 
             # display pulse histogram
-            '''
+            ''' 
             plot_pulse_histogram(_instile,
                                  q_thresh,
                                  delta_time_slice)

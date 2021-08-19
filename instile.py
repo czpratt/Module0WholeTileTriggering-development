@@ -19,32 +19,34 @@ class Instile:
         self.tile_id          = tile_id
         self.evid             = evid
 
-        self.window          = None     # charge window
-        self.pulse_indicator = None     # indicator for the start of a pulse 
+        self.window                = None   # charge accumulation window for each time slice
+        self.sliding_charge_window = None   # sliding charge window saving sum(charges)
+        self.pulse_indicator       = None   # indicator for the start of a pulse 
         
         self.pulse_start_time_stamp = None  # start times of a pulse
         self.pulse_end_time_stamp   = None  # end times of a pulse
 
-        self.charges      = None     # list of charges from hits
-        self.time_stamps  = None     # list of time stamps of hits
-        self.npulse_count = None     # counts number of pulses on the tile
+        self.charges      = None   # list of charges from hits
+        self.time_stamps  = None   # list of time stamps of hits
+        self.npulse_count = None   # counts number of pulses on the tile
         
         self.charges_list       = None  # list of all charges on a tile from a pulse
         self.time_stamps_list   = None  # list of all time stamps on a tile from a pulse
 
-        self.first_hit_at_lsb_index = None # index of the first hit occuring at the LSB
-        self.last_hit_at_lsb_index  = None # index of last hit occuring at LSB
+        self.first_hit_at_lsb_index = None  # index of the first hit occuring at the LSB
+        self.last_hit_at_lsb_index  = None  # index of last hit occuring at LSB
 
         self.startup()
     
     
     def startup(self):
         ''' Initialization for redundancy '''
-        self.window          = deque()
-        self.charges         = deque()
-        self.time_stamps     = deque()
-        self.pulse_indicator = False
-        self.npulse_count    = 0
+        self.window                = deque()
+        self.sliding_charge_window = deque()
+        self.charges               = deque()
+        self.time_stamps           = deque()
+        self.pulse_indicator       = False
+        self.npulse_count          = 0
 
         # to potentially handle multiple pulses at one tile in the same event
         self.pulse_start_time_stamp = []
