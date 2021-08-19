@@ -47,10 +47,10 @@ def event_tile_gif(selection, tile_ids, event_ids):
                 plot_py.append(py[i])
                 plot_pt.append(pt[i])
 
-        num_images = 100 #The number of images we will compile into a gif for this event
+        num_images = 100 #The number of images to compile into a gif/mp4
         section_widths = (max(plot_pt) - min(plot_pt))/num_images
 
-        gif_px = [] #This will store arrays for each of he num_images sections
+        gif_px = [] #To store arrays for each of he num_images sections
         gif_py = []
         gif_pt = []
 
@@ -130,10 +130,10 @@ def event_gif(selection, event_ids):
         plot_py = hits['py']
         plot_pt = hits['ts']
 
-        num_images = 100 #The number of images we will compile into a gif for this event
+        num_images = 100 #The number of images to compile into gif/mp4
         section_widths = (max(plot_pt) - min(plot_pt))/num_images
 
-        gif_px = [] #This will store arrays for each of he num_images sections
+        gif_px = [] #To store arrays for each of he num_images sections
         gif_py = []
         gif_pt = []
 
@@ -186,16 +186,36 @@ def event_gif(selection, event_ids):
             for p in np.arange((tpc_width/asic_length)):
                 posn = -scatter_width + asic_length*p
                 if p%10==0:
-                    gif_axes.axvline(x=posn, ymin=-scatter_length, ymax=scatter_length, color='r', linewidth=0.3)
+                    gif_axes.axvline(x=posn,
+                                    ymin=-scatter_length,
+                                    ymax=scatter_length,
+                                    color='r',
+                                    linewidth=0.3
+                                    )
                 else:
-                    gif_axes.axvline(x=posn, ymin=-scatter_length, ymax=scatter_length, color='b', linewidth=0.1)
+                    gif_axes.axvline(x=posn,
+                                    ymin=-scatter_length,
+                                    ymax=scatter_length,
+                                    color='b',
+                                    linewidth=0.1
+                                    )
 
             for l in np.arange((tpc_length/asic_length)):
                 posn = -scatter_length + asic_length*l
                 if l%10==0:
-                    gif_axes.axhline(y=posn, xmin=-scatter_width, xmax=scatter_width, color='r', linewidth=0.3)
+                    gif_axes.axhline(y=posn,
+                                    xmin=-scatter_width,
+                                    xmax=scatter_width,
+                                    color='r',
+                                    linewidth=0.3
+                                    )
                 else:
-                    gif_axes.axhline(y=posn, xmin=-scatter_width, xmax=scatter_width, color='b', linewidth=0.1)
+                    gif_axes.axhline(y=posn,
+                                    xmin=-scatter_width,
+                                    xmax=scatter_width,
+                                    color='b',
+                                    linewidth=0.1
+                                    )
 
             plt.savefig('gif_save.png')
             images.append(imageio.imread('gif_save.png'))
