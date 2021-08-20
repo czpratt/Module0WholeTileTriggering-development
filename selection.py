@@ -24,13 +24,18 @@ class Selection:
         self.config              = Configuration(config_file)    
         self.ticks_per_qsum      = 10              # clock ticks per time bin
         self.t0_charge_threshold = 200.0           # Rough qsum threshold
-        self.events              = self.data_file['events']  
-        self.hits                = self.data_file['hits']        
+        self.events              = self.data_file['charge/events/data']  
+        #print(self.events)
+        self.hits                = self.data_file['charge/hits/data']  
+        #print(self.hits)      
+        self.refs                = self.data_file['charge/events/ref/charge/hits/ref']
+        self.event_refs          = self.refs[:,0]
+        self.hits_refs           = self.refs[:,1]
         self.nhits               = self.events['nhit']           
-        self.info                = self.data_file['info'].attrs # extraneous information 
-        self.vdrift              = self.info['vdrift'] 
-        self.clock_period        = self.info['clock_period']    
-        self.ext_trigs           = self.data_file['ext_trigs'] if 'ext_trigs' \
+        #self.info                = self.data_file['info'].attrs # extraneous information 
+        #self.vdrift              = self.info['vdrift'] 
+        #self.clock_period        = self.info['clock_period']    
+        self.ext_trigs           = self.data_file['charge/ext_trigs/data'] if 'ext_trigs' \
                                    in self.data_file.keys() else None 
         self.nhits_cut       = nhits_cut
         self.nhit_cut_events = None
@@ -62,7 +67,8 @@ class Selection:
             print('Analyzing event {} of {} total events'.format(evid, self.events[-1][0]))
 
         _event               = self.events[evid]
-        _event_hits          = self.hits[_event['hit_ref']]
+        _event_hits_refs     = self.hits_refs[(self.event_refs == evid)] #self.hits[_event['hit_ref']]
+        _event_hits          = self.hits[_event_hits_refs]
         _event_hits_per_tile = {i: 0 for i in range(1, 16 + 1, 1)} # tile dictionary
         _cut_event           = None
         
@@ -101,6 +107,7 @@ class Selection:
     def get_tile_id(self, 
                     hit) -> int:
         ''' Fetches tile_id within selection class '''
+        #print("hit: {}".format(hit))
         _io_group   = hit['iogroup']
         _io_channel = hit['iochannel']
         _tile_id = self.config[_io_group, _io_channel]
@@ -115,7 +122,10 @@ class Selection:
     def get_event_hits(self, 
                        event):
         ''' Fetches the hits within an event '''
-        return self.hits[event['hit_ref']] # good
+        evid                 = event[0]
+        _event_hits_refs     = self.hits_refs[(self.event_refs == evid)] #self.hits[_event['hit_ref']]
+        _event_hits          = self.hits[_event_hits_refs]
+        return _event_hits #self.hits[event['hit_ref']] # good
 
     def get_z_anode(self, 
                     tile_id):
