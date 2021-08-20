@@ -198,8 +198,6 @@ class PulseFinder:
             _start_indicator = self.instile_dict[instile].pulse_indicator
 
             if _sum_window > self.peak_charge_value:
-                print('peak charge value found: {} at {}'.format(_sum_window,
-                                                                 self.ts - self.delta_time_slice))
                 self.peak_charge_value = _sum_window
                 self.peak_charge_value_time_stamp = self.ts - self.delta_time_slice
 
