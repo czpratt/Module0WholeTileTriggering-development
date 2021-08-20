@@ -39,10 +39,13 @@ class PulseFinder:
         self.event_start_time = None   # event start time
         self.event_end_time   = None   # event end time
         self.max_time_step    = None   # maximum attainable time slice
-        
+       
+        self.peak_charge_value    = None    # value of peak charge within fifo sliding window
+        self.peak_charge_value_ts = None    # time stamp of fifo sliding window peak charge
+
         self.complete_pulses  = None   # complete pulse
         self.tile_pulses      = None   # keeps track of npulses on a tile
-        self.event_pulses     = {}
+        self.event_pulses     = {}     # stores all event pulses in datalog file
 
         self.NO_HIT                 = -10   # constant for when no hit occurred
         self.NO_Q                   = 0     # constant for when no charge
@@ -86,6 +89,9 @@ class PulseFinder:
         
         self.tile_pulses     = {}
         self.complete_pulses = {}
+
+        self.peak_charge_value            = 0
+        self.peak_charge_value_time_stamp = 0
 
 
     def append_charge_and_time(self,
@@ -170,7 +176,16 @@ class PulseFinder:
 
         self.instile_dict[instile_id].sliding_charge_window.append(sum_window)
 
-    
+
+    def store_peak_charge_information(self,
+                                      instile_id):
+        ''' Manages the storage of peak charge information '''
+        self.instile_dict[instile_id].store_peak_charge_value(self.peak_charge_value)
+        self.instile_dict[instile_id].store_peak_charge_value_time_stamp(self.peak_charge_value_time_stamp)
+        self.peak_charge_value = 0
+        self.peak_charge_time_stamp = 0
+
+
 
     def make_pulse_determination(self):
         ''' 
@@ -181,6 +196,11 @@ class PulseFinder:
         for instile in self.instile_dict:
             _sum_window = sum(self.instile_dict[instile].window)
             _start_indicator = self.instile_dict[instile].pulse_indicator
+
+            if _sum_window > self.peak_charge_value:
+                self.peak_charge_value = _sum_window
+                self.peak_charge_value_time_stamp = self.ts - self.delta_time_slice
+
 
             self.manage_sliding_charge_window(instile, 
                                               _sum_window)
@@ -216,6 +236,9 @@ class PulseFinder:
                 
                 self.last_hit_at_lsb_index = self.hit_count
                 self.instile_dict[instile].set_last_hit_at_lsb_index(self.last_hit_at_lsb_index)
+
+                # store peak charge value and peak time stamp
+                self.store_peak_charge_information(instile)
 
 
     def sync_pulse_determination(self):

@@ -26,6 +26,9 @@ class Instile:
         self.pulse_start_time_stamp = None  # start times of a pulse
         self.pulse_end_time_stamp   = None  # end times of a pulse
 
+        self.peak_charge_value_list            = None
+        self.peak_charge_value_time_stamp_list = None
+
         self.charges      = None   # list of charges from hits
         self.time_stamps  = None   # list of time stamps of hits
         self.npulse_count = None   # counts number of pulses on the tile
@@ -56,12 +59,15 @@ class Instile:
         self.charges_list           = []
         self.time_stamps_list       = []
 
+        self.peak_charge_value_list = []
+        self.peak_charge_value_time_stamp_list = []
+
 
     def __repr__(self):
         ''' String representation function '''
-        return (' evid = {}, tile_id = {}, npulse_count = {}, \n\
+        return ('\n\nevid = {}, tile_id = {}, npulse_count = {}, \n\
 start times = {}, end times = {}, len(charges_list) = {}, len(time_stamps_list) = {}\n\
-first_hit_index = {}, last_hit_index = {}\n'.format(
+first_hit_index = {}, last_hit_index = {}\npeak_charge = {}, peak_charge_ts = {}\n'.format(
                                 self.evid,
                                 self.tile_id,
                                 self.npulse_count,
@@ -70,7 +76,9 @@ first_hit_index = {}, last_hit_index = {}\n'.format(
                                 len(self.charges_list),
                                 len(self.time_stamps_list),
                                 self.first_hit_at_lsb_index,
-                                self.last_hit_at_lsb_index))
+                                self.last_hit_at_lsb_index,
+                                self.peak_charge_value_list,
+                                self.peak_charge_value_time_stamp_list))
    
 
     def set_pulse_start_time_stamp(self,
@@ -83,7 +91,7 @@ first_hit_index = {}, last_hit_index = {}\n'.format(
                                  pulse_end_time):
         ''' Start time of the pulse '''
         self.pulse_end_time_stamp.append(pulse_end_time)
-
+    
 
     def set_pulse_indicator(self,
                             decision):
@@ -111,8 +119,20 @@ first_hit_index = {}, last_hit_index = {}\n'.format(
     def store_time_stamps_in_list(self):
         ''' Store individual stacks to handle multiple hits '''
         self.time_stamps_list.append(self.time_stamps)
+   
+    
+    def store_peak_charge_value(self,
+                                charge_value):
+        ''' Store peak charge value of a pulse '''
+        self.peak_charge_value_list.append(charge_value)
 
 
+    def store_peak_charge_value_time_stamp(self,
+                                           time_stamp):
+        ''' Store peak charge value time stamp '''
+        self.peak_charge_value_time_stamp_list.append(time_stamp)
+
+    
     def increment_npulse_count(self):
         ''' Increments npulse count '''
         self.npulse_count += 1
