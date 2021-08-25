@@ -2,7 +2,7 @@
     Addressing the Whole Tile Triggering problem occuring in the
     Module 0 detector at LBNL
 
-    Version 1.1.0
+    Version 1.0.0
 
     o--- Contributers ---o
      Christian Pratt: czpratt@ucdavis.edu
@@ -25,9 +25,9 @@ from collections import deque
 from dataclasses import dataclass
 
 from tile_plot import *
-from display_pulses import *
 from selection import Selection
 from pulse_finder import PulseFinder
+from pulse_display import PulseDisplay
 from configuration import Configuration
 
 matplotlib.rcParams['text.usetex'] = True
@@ -73,11 +73,13 @@ if __name__ == '__main__':
         print(selection)
     
     ''' Obtain pulses from nhit cut events '''
+
     n                = 16
     time_step        = 1
     delta_time_slice = 5
     q_thresh         = float(20000)
     max_q_window_len = delta_time_slice
+
 
     pulse_finder = PulseFinder(n,
                                time_step,
@@ -87,12 +89,19 @@ if __name__ == '__main__':
 
     event_pulses = pulse_finder.find_pulses(selection)
 
-    print('event_pulses: {}'.format(event_pulses))
+    #print('event_pulses: {}'.format(event_pulses))
     
     ''' Display pulse information '''
     if args.display_pulses:
+        pulse_display = PulseDisplay(event_pulses,
+                                     q_thresh,
+                                     delta_time_slice)
+       
+        pulse_display.display_pulses(selection)
+
+        '''
         display(selection,
                 event_pulses,
                 q_thresh,
                 delta_time_slice)
-        
+        '''
