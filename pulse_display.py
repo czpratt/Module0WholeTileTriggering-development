@@ -81,10 +81,9 @@ class PulseDisplay:
 
 
     def set_hit_count(self,
-                      hit_count):
+                      first_hit_at_lsb,):
         ''' Sets hit count iterator '''
-        self.hit_count = hit_count
-
+        self.hit_count = 0
         
     def set_pulse_time_stamps(self,
                               pulse_id):
@@ -139,28 +138,29 @@ class PulseDisplay:
 
     def get_nbins_by_lsb(self):
         ''' Fetches nbins by lsb '''
-        return int(self.pulse_time_stamps[-1] - self.pulse_time_stamps[0])
-
+        _cut_off = 125
+        difference = self.pulse_time_stamps[-1] - self.pulse_time_stamps[0]
+        
+        if difference > _cut_off:
+            return _cut_off
+        else:
+            return difference - (difference % self.delta_time_slice)
 
     def obtain_peak_charge_info(self,
                                 pulse_id):
         ''' Returns desired peak information of a pulse '''
         self.set_peak_charge_value(pulse_id)
         self.set_peak_charge_value_time_stamp(pulse_id)
-
-        # (based on collected hit information)
-        _peak_charge_index     = self.pulse_charges.index(max(self.pulse_charges))
-        _ts_at_peak_charge     = self.pulse_time_stamps[_peak_charge_index]
         
-        _peak_range_difference = _ts_at_peak_charge - self.time_range
-        _peak_range_addition   = _ts_at_peak_charge + self.time_range
+        _peak_range_difference = self.peak_charge_value_time_stamp - self.time_range
+        _peak_range_addition   = self.peak_charge_value_time_stamp + self.time_range
 
         # obtain plot ranges
         _plot_range_start = self.event_start_ts if _peak_range_difference < self.event_start_ts \
                             else _peak_range_difference
         _plot_range_end   = self.event_end_ts if _peak_range_addition > self.event_end_ts \
                             else _peak_range_addition 
-        
+
         return _plot_range_start, _plot_range_end
 
 
@@ -169,9 +169,9 @@ class PulseDisplay:
         ''' Plots charge that surrounds pulse '''
         _charges     = []
         _time_stamps = []
-        _range = 75         # temporary
+        _range = 250        # temporary
         _hit_range = 10
-        
+
         self.set_time_range(_range)
         
         # obtain charges and time_stamps surrounding hits
@@ -181,9 +181,9 @@ class PulseDisplay:
             self.set_hit_count(self.instile.first_hit_at_lsb_index[pulse])
             self.set_rms()
 
-            _nbins_lsb = self.get_nbins_by_lsb() + 1
+            _nbins_lsb = self.get_nbins_by_lsb() # adding 1 for display purposes
             _nbins_time_slice = int(_nbins_lsb / self.delta_time_slice)
-            _nbins_limit_time_slice = int(_nbins_time_slice / 5)
+            _nbins_limit_time_slice = int(_nbins_time_slice / self.delta_time_slice)
 
             # will eventually need a buffer here to we don't go out of bounds
             while self.hit_count < self.instile.last_hit_at_lsb_index[pulse] + _hit_range:
@@ -196,9 +196,8 @@ class PulseDisplay:
                     pass
                 self.hit_count += 1
 
-            
             _range_start, _range_end = self.obtain_peak_charge_info(pulse)
-
+    
             ''' Plot 1: # of LSB increments '''
             fig, (axs, axs_info) = plt.subplots(1, 2)
             
