@@ -81,7 +81,7 @@ This will be useful when plotting utility functions are utilized in the post-pro
 
 - `instile.py`: Class file for an Instile
 
-- `display_pulses`: Post-processing plotting utilities for pulses (currently function based) 
+- `pulse_display`: Post-processing plotting utilities for pulses (class based) 
 Be sure to include `--display_pulses` at the command line to activate the plotting of a histogram.
 
 - `tile_plot.py`: Plotting functionality
