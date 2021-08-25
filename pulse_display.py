@@ -15,7 +15,6 @@ class PulseDisplay:
         NOTES:
             1) Can eventually turn this into a menu-esque system
             2) only utilizing LSB-related info for plots
-            
     '''
     def __init__(self,
                  event_pulses,
@@ -38,7 +37,6 @@ class PulseDisplay:
 
         self.time_stamps = None
         self.charges     = None
-        self.rms         = None
 
         self.pulse_charges     = None
         self.pulse_time_stamps = None
@@ -49,8 +47,8 @@ class PulseDisplay:
         
         self.peak_charge_value = None
         self.peak_charge_value_ts = None
+        self.rms = None
 
-        
 
     def set_evid(self,
                  evid):
@@ -116,6 +114,29 @@ class PulseDisplay:
         self.event_end_ts = self.event_hits[-1][3]
 
 
+    def set_peak_charge_value(self,
+                              pulse_id):
+        ''' Sets value of the charge at the peak of pulse '''
+        self.peak_charge_value = round(self.instile.peak_charge_value_list[pulse_id], 2)
+
+        
+    def set_peak_charge_value_time_stamp(self,
+                                         pulse_id):
+        ''' Sets time stamp of the pulses's peak charge value '''
+        self.peak_charge_value_time_stamp = self.instile.peak_charge_value_time_stamp_list[pulse_id]
+
+
+    def set_rms(self):
+        ''' Sets rms value of current pulse '''
+        _pulse_start_time = self.pulse_time_stamps[0]
+        _pulse_end_time   = self.pulse_time_stamps[-1]
+        
+        _normalized_time_stamps = np.array(self.pulse_time_stamps - _pulse_start_time)
+        _rms = round(np.sqrt(np.mean(_normalized_time_stamps) ** 2), 2)    
+
+        self.rms = _rms
+
+
     def get_nbins_by_lsb(self):
         ''' Fetches nbins by lsb '''
         return int(self.pulse_time_stamps[-1] - self.pulse_time_stamps[0])
@@ -124,10 +145,9 @@ class PulseDisplay:
     def obtain_peak_charge_info(self,
                                 pulse_id):
         ''' Returns desired peak information of a pulse '''
-        # peak charge value information (based on time slice)
-        _peak_charge_value = round(self.instile.peak_charge_value_list[pulse_id], 2)
-        _peak_charge_value_time_stamp = self.instile.peak_charge_value_time_stamp_list[pulse_id]
-        
+        self.set_peak_charge_value(pulse_id)
+        self.set_peak_charge_value_time_stamp(pulse_id)
+
         # (based on collected hit information)
         _peak_charge_index     = self.pulse_charges.index(max(self.pulse_charges))
         _ts_at_peak_charge     = self.pulse_time_stamps[_peak_charge_index]
@@ -141,10 +161,7 @@ class PulseDisplay:
         _plot_range_end   = self.event_end_ts if _peak_range_addition > self.event_end_ts \
                             else _peak_range_addition 
         
-        _plot_range = _plot_range_end - _plot_range_start
-
-
-        return _plot_range_start, _plot_range_end, _peak_charge_value, _ts_at_peak_charge
+        return _plot_range_start, _plot_range_end
 
 
     def plot_charge_around_pulse_by_lsb(self,
@@ -152,7 +169,7 @@ class PulseDisplay:
         ''' Plots charge that surrounds pulse '''
         _charges     = []
         _time_stamps = []
-        _range = 75
+        _range = 75         # temporary
         _hit_range = 10
         
         self.set_time_range(_range)
@@ -162,8 +179,12 @@ class PulseDisplay:
             self.set_pulse_time_stamps(pulse)
             self.set_pulse_charges(pulse)
             self.set_hit_count(self.instile.first_hit_at_lsb_index[pulse])
-            _nbins_lsb = self.get_nbins_by_lsb()
-           
+            self.set_rms()
+
+            _nbins_lsb = self.get_nbins_by_lsb() + 1
+            _nbins_time_slice = int(_nbins_lsb / self.delta_time_slice)
+            _nbins_limit_time_slice = int(_nbins_time_slice / 5)
+
             # will eventually need a buffer here to we don't go out of bounds
             while self.hit_count < self.instile.last_hit_at_lsb_index[pulse] + _hit_range:
                 _tile_id = selection.get_tile_id(self.event_hits[self.hit_count])
@@ -176,24 +197,105 @@ class PulseDisplay:
                 self.hit_count += 1
 
             
-            _range_start, _range_end, peak_q_value, _ts_at_peak_q = \
-                                                                  self.obtain_peak_charge_info(pulse)
+            _range_start, _range_end = self.obtain_peak_charge_info(pulse)
 
-            _nbins_lsb = self.get_nbins_by_lsb()
-
-            fig, axs = plt.subplots()
+            ''' Plot 1: # of LSB increments '''
+            fig, (axs, axs_info) = plt.subplots(1, 2)
+            
             axs.hist(_time_stamps,
                      weights=_charges,
                      bins=_nbins_lsb,
                      histtype='step',
                      label='binned')
 
-            _title = 'Event {}, Tile {}, nbins = {}'.format(self.evid, self.tile_id, _nbins_lsb)
+            _title = 'Event {}, Tile {}'.format(self.evid, self.tile_id)
 
             axs.set_title(r'{}'.format(_title))
-            axs.set_xlabel(r'timestep [0.1 $\mathrm{\mu}$s]')
-            axs.set_ylabel(r'charge [1000 * $10^3$ e]')
+            axs.set_xlabel(r'timestep [0.1 $\mathrm{\mu}$s]', loc='left')
+            axs.set_ylabel(r'charge [1000 * $10^3$ e]', loc='bottom')
             axs.set_xlim(xmin=_range_start, xmax=_range_end)
+          
+            axs_info_test = '''nbins = {}
+                               plot\_range = {}
+                               rms = {} 
+                               peak charge value = {}
+                               peak charge value ts = {}
+                            '''.format(_nbins_lsb, 
+                                       _range_end - _range_start,
+                                       self.rms,
+                                       self.peak_charge_value,
+                                       self.peak_charge_value_time_stamp)
+
+            axs_info.text(0.1, 0.60, axs_info_test, transform=axs_info.transAxes, fontsize=11, verticalalignment='top')
+            axs_info.set_xticklabels([])
+            axs_info.set_yticklabels([])
+            axs_info.set_xticks([])
+            axs_info.set_yticks([])
+
+            ''' Plot 2: # of sliding window entries ''' 
+            fig2, (ax2, ax2_info) = plt.subplots(1, 2) 
+            ax2.hist(_time_stamps,
+                     weights=_charges,
+                     bins=_nbins_time_slice,
+                     histtype='step',
+                     label='binned')
+            _title_2 = 'Event {}, Tile {}'.format(self.evid, self.tile_id)
+
+            ax2.set_title(r'{}'.format(_title_2))
+            ax2.set_xlabel(r'timestep [0.1 $\mathrm{\mu}$s]', loc='left')
+            ax2.set_ylabel(r'charge [1000 * $10^3$ e]', loc='bottom')
+            ax2.set_xlim(xmin=_range_start, xmax=_range_end)
+          
+            ax2_info_test = '''nbins = {}
+                               plot\_range = {}
+                               rms = {} 
+                               peak charge value = {}
+                               peak charge value ts = {}
+                            '''.format(_nbins_time_slice, 
+                                       _range_end - _range_start,
+                                       self.rms,
+                                       self.peak_charge_value,
+                                       self.peak_charge_value_time_stamp)
+
+            ax2_info.text(0.1, 0.60, ax2_info_test, transform=ax2_info.transAxes, fontsize=11, verticalalignment='top')
+
+            ax2_info.set_xticklabels([])
+            ax2_info.set_yticklabels([])
+            ax2_info.set_xticks([])
+            ax2_info.set_yticks([])
+
+            ''' Plot 3: 5 sliding window entries per bin (25 LSB's) '''
+            fig3, (ax3, ax3_info) = plt.subplots(1, 2)
+            ax3.hist(_time_stamps,
+                     weights=_charges,
+                     bins=_nbins_limit_time_slice,
+                     histtype='step',
+                     label='binned')
+
+            _title_3 = 'Event {}, Tile {}'.format(self.evid, self.tile_id)
+
+            ax3.set_title(r'{}'.format(_title_3))
+            ax3.set_xlabel(r'timestep [0.1 $\mathrm{\mu}$s]', loc='left')
+            ax3.set_ylabel(r'charge [1000 * $10^3$ e]', loc='bottom')
+            ax3.set_xlim(xmin=_range_start, xmax=_range_end)
+          
+            ax3_info_test = '''nbins = {}
+                               plot\_range = {}
+                               rms = {} 
+                               peak charge value = {}
+                               peak charge value ts = {}
+                            '''.format(_nbins_limit_time_slice, 
+                                       _range_end - _range_start,
+                                       self.rms,
+                                       self.peak_charge_value,
+                                       self.peak_charge_value_time_stamp)
+
+            ax3_info.text(0.1, 0.60, ax3_info_test, transform=ax3_info.transAxes, fontsize=11, verticalalignment='top')
+
+            ax3_info.set_xticklabels([])
+            ax3_info.set_yticklabels([])
+            ax3_info.set_xticks([])
+            ax3_info.set_yticks([])
 
             plt.show()
 

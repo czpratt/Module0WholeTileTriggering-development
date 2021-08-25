@@ -2,7 +2,7 @@
     Addressing the Whole Tile Triggering problem occuring in the
     Module 0 detector at LBNL
 
-    Version 1.0.0
+    Version 1.0.1
 
     o--- Contributers ---o
      Christian Pratt: czpratt@ucdavis.edu
@@ -89,7 +89,7 @@ if __name__ == '__main__':
 
     event_pulses = pulse_finder.find_pulses(selection)
 
-    #print('event_pulses: {}'.format(event_pulses))
+    print('event_pulses: {}'.format(event_pulses))
     
     ''' Display pulse information '''
     if args.display_pulses:
@@ -99,9 +99,3 @@ if __name__ == '__main__':
        
         pulse_display.display_pulses(selection)
 
-        '''
-        display(selection,
-                event_pulses,
-                q_thresh,
-                delta_time_slice)
-        '''
