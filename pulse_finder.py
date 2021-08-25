@@ -200,6 +200,8 @@ class PulseFinder:
             if _sum_window > self.peak_charge_value:
                 self.peak_charge_value = _sum_window
                 self.peak_charge_value_time_stamp = self.ts - self.delta_time_slice
+            else:
+                pass
 
 
             self.manage_sliding_charge_window(instile, 
