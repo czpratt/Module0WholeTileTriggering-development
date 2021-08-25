@@ -3,8 +3,7 @@
     Script for plotting functionality for pulse information
     ==> IN PROGRESS
     Notes:
-        1) only utilize LSB-related plots for pulses
-        -- for events, keep same (20, 50, 100) structure
+        1) only utilizing LSB-related plots for pulses
 '''
 import math
 import numpy as np
@@ -68,7 +67,108 @@ def plot_pulse_histogram_from_peak(selection,
     _charges     = None
     _rms         = None
 
-    _range  = 100    # value of the range we want to plot (toggle)
+    _range  = 150    # value of the range we want to plot (toggle)
+
+    _plot_range_start = None
+    _plot_range_end   = None
+
+    _event_hits = selection.get_event_hits(selection.get_event(evid))
+    
+    _event_start_time = _event_hits[0][3]
+    _event_end_time   = _event_hits[-1][3]
+
+    # iterate through the number of pulses stored by the instile,
+    # and plot histogram
+    for i in range(0, instile.npulse_count, 1):
+        _time_stamps = list(instile.time_stamps_list[i])
+        _charges     = list(instile.charges_list[i])
+       
+        _start_time = _time_stamps[0]
+        _end_time   = _time_stamps[-1]
+      
+        # normalized time stamps and compute rms
+        _normalized_time_stamps = np.array(_time_stamps - _start_time)
+        _rms = round(np.sqrt(np.mean(np.array(_normalized_time_stamps) ** 2)), 2)
+    
+        # peak charge value information (based on time slice)
+        _peak_charge_value = round(instile.peak_charge_value_list[i], 2)
+        _peak_charge_value_time_stamp = instile.peak_charge_value_time_stamp_list[i]
+        
+        # (based on collected hit information)
+        _peak_charge_index     = _charges.index(max(_charges))
+        _ts_at_peak_charge     = _time_stamps[_peak_charge_index]
+        _peak_range_difference = _ts_at_peak_charge - _range
+        _peak_range_addition   = _ts_at_peak_charge + _range
+
+        # obtain nbins for lsb increment and # fifo entries
+        _nbins_lsb        = int(_time_stamps[-1] - _time_stamps[0])
+        _nbins_time_slice = int(_nbins_lsb / delta_time_slice)
+
+        # obtain plot ranges
+        _plot_range_start = _event_start_time if _peak_range_difference < _event_start_time \
+                            else _peak_range_difference 
+        _plot_range_end   = _event_end_time if _peak_range_addition < _event_start_time \
+                            else _peak_range_addition 
+        _plot_range = _plot_range_end - _plot_range_start
+        
+        # plotting pulse histograms
+        fig, (ax1, ax2) = plt.subplots(1, 2)
+        ax1.hist(_time_stamps,
+                 weights=_charges,
+                 bins=_nbins_time_slice,
+                 histtype='step',
+                 label='binned')
+        
+        ax2.hist(_time_stamps,
+                 weights=_charges,
+                 bins=_nbins_lsb,
+                 histtype='step',
+                 label='binned')
+        
+
+        _title_1 = '''Event {}, Tile {}, nbins = {} 
+                    plot\_range = {}, rms = {}
+                    peak charge = {}, peak charge ts = {}'''.format(evid, 
+                 tile_id, 
+                 _nbins_time_slice,
+                 _plot_range,
+                 _rms,
+                 _peak_charge_value,
+                 _peak_charge_value_time_stamp)
+        
+        _title_2 = '''Event {}, Tile {}, nbins = {}
+                    plot\_range = {}, rms = {}
+                    peak charge = {}, peak charge ts = {}'''.format(evid, 
+                 tile_id, 
+                 _nbins_lsb,
+                 _plot_range,
+                 _rms,
+                 _peak_charge_value,
+                 _peak_charge_value_time_stamp)
+
+        ax1.set_title(r'{}'.format(_title_1))
+        ax1.set_xlabel(r'timestep [0.1 $\mathrm{\mu}$s]', loc='left')
+        ax1.set_ylabel(r'charge [1000 * $10^3$ e]', loc='bottom')
+        ax1.set_xlim(xmin=_plot_range_start, xmax=_plot_range_end)
+
+        ax2.set_title(r'{}'.format(_title_2))
+        ax2.set_xlim(xmin=_plot_range_start, xmax=_plot_range_end)
+        plt.show()
+        
+
+
+def fine_tuning_parameters(selection,
+                           evid,
+                           tile_id,
+                           instile,
+                           q_thresh,
+                           delta_time_slice):
+    ''' Experimental parameter tuning plotting functionality '''
+    _time_stamps = None
+    _charges     = None
+    _rms         = None
+
+    _range  = 75    # value of the range we want to plot (toggle)
 
     _plot_range_start = None
     _plot_range_end   = None
@@ -112,51 +212,32 @@ def plot_pulse_histogram_from_peak(selection,
                             else _peak_range_addition 
         _plot_range = _plot_range_end - _plot_range_start
 
-        # plot
-        fig, (ax1, ax2) = plt.subplots(1, 2)
-        ax1.hist(_time_stamps,
-                 weights=_charges,
-                 bins=_nbins_time_slice,
-                 histtype='step',
-                 label='binned')
-        
-        ax2.hist(_time_stamps,
+
+        _title = '''Event {}, Tile {}, nbins = {}, q\_thresh = {}, $\Delta$T = {}
+                    plot\_range = {}, rms = {}, peak\_q = {}'''.format(evid, 
+                                                         tile_id, 
+                                                         _nbins_lsb,
+                                                         q_thresh, 
+                                                         delta_time_slice,
+                                                         _plot_range,
+                                                         _rms,
+                                                         _peak_charge_value)
+        fig, axs = plt.subplots()
+
+        axs.hist(_time_stamps,
                  weights=_charges,
                  bins=_nbins_lsb,
                  histtype='step',
                  label='binned')
-        
 
-        _title_1 = '''Event {}, Tile {}, nbins = {} 
-                    plot\_range = {}, rms = {}
-                    peak charge = {}, peak charge ts = {}'''.format(evid, 
-                 tile_id, 
-                 _nbins_time_slice,
-                 _plot_range,
-                 _rms,
-                 _peak_charge_value,
-                 _peak_charge_value_time_stamp)
-        
-        _title_2 = '''Event {}, Tile {}, nbins = {} 
-                    plot\_range = {}, rms = {}
-                    peak charge = {}, peak charge ts = {}'''.format(evid, 
-                 tile_id, 
-                 _nbins_lsb,
-                 _plot_range,
-                 _rms,
-                 _peak_charge_value,
-                 _peak_charge_value_time_stamp)
+        axs.set_title(r'{}'.format(_title))
+        axs.set_xlabel(r'timestep [0.1 $\mathrm{\mu}$s]', loc='left')
+        axs.set_ylabel(r'charge [1000 * $10^3$ e]', loc='bottom')
+        axs.set_xlim(xmin=_plot_range_start, xmax=_plot_range_end)
 
-        ax1.set_title(r'{}'.format(_title_1))
-        ax1.set_xlabel(r'timestep [0.1 $\mathrm{\mu}$s]', loc='left')
-        ax1.set_ylabel(r'charge [1000 * $10^3$ e]', loc='bottom')
-        ax1.set_xlim(xmin=_plot_range_start, xmax=_plot_range_end)
-
-        ax2.set_title(r'{}'.format(_title_2))
-        ax2.set_xlim(xmin=_plot_range_start, xmax=_plot_range_end)
-        
         plt.show()
-        
+
+
 
 def plot_event_histogram(selection,
                          evid):
@@ -320,12 +401,20 @@ def display(selection,
                                      delta_time_slice)
             '''
             
-            '''
             # display pulse histogram centered at peak value
-            plot_pulse_histogram_from_peak(selection,
-                                           evid,
-                                           tile_id,
-                                           _instile,
-                                           q_thresh,
-                                           delta_time_slice)
             '''
+            plot_pulse_histogram_from_peak(selection,
+                                            evid,
+                                            tile_id,
+                                            _instile,
+                                            q_thresh,
+                                            delta_time_slice)
+            '''
+
+            # plots for fine tuning parameters
+            fine_tuning_parameters(selection,
+                                   evid, 
+                                   tile_id, 
+                                   _instile,
+                                   q_thresh,
+                                   delta_time_slice)
