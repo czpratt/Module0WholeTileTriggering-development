@@ -136,15 +136,20 @@ class PulseDisplay:
         self.rms = _rms
 
 
-    def get_nbins_by_lsb(self):
-        ''' Fetches nbins by lsb '''
-        _cut_off = 125
-        difference = self.pulse_time_stamps[-1] - self.pulse_time_stamps[0]
+    def obtain_nbins(self,
+                     time_stamps):
+        ''' 
+            Fetches nbins by lsb and time slice
+            NOTES:
+                (1) Come up with better naming schemes
+        '''
+        _cut_time_stamps = sorted(list(set(time_stamps)))
+        _nbins_lsb = (_cut_time_stamps[-1] - _cut_time_stamps[0])
+        _nbins_time_slice = int(_nbins_lsb / self.delta_time_slice)
+        _nbins_limit_time_slice = int(math.ceil(_nbins_time_slice / self.delta_time_slice))
+
+        return _nbins_lsb, _nbins_time_slice, _nbins_limit_time_slice
         
-        if difference > _cut_off:
-            return _cut_off
-        else:
-            return difference - (difference % self.delta_time_slice)
 
     def obtain_peak_charge_info(self,
                                 pulse_id):
@@ -170,9 +175,9 @@ class PulseDisplay:
         _charges     = []
         _time_stamps = []
         _range = 250        # temporary
-        _hit_range = 10
+        _hit_range = 100
 
-        self.set_time_range(_range)
+        #self.set_time_range(_range)
         
         # obtain charges and time_stamps surrounding hits
         for pulse in range(0, self.instile.npulse_count, 1):
@@ -180,10 +185,6 @@ class PulseDisplay:
             self.set_pulse_charges(pulse)
             self.set_hit_count(self.instile.first_hit_at_lsb_index[pulse])
             self.set_rms()
-
-            _nbins_lsb = self.get_nbins_by_lsb() # adding 1 for display purposes
-            _nbins_time_slice = int(_nbins_lsb / self.delta_time_slice)
-            _nbins_limit_time_slice = int(_nbins_time_slice / self.delta_time_slice)
 
             # will eventually need a buffer here to we don't go out of bounds
             while self.hit_count < self.instile.last_hit_at_lsb_index[pulse] + _hit_range:
@@ -195,6 +196,11 @@ class PulseDisplay:
                     # hit happened at a different tile
                     pass
                 self.hit_count += 1
+
+            
+            _nbins_lsb, _nbins_time_slice, _nbins_limit_time_slice = self.obtain_nbins(_time_stamps)
+
+            self.set_time_range(_range)
 
             _range_start, _range_end = self.obtain_peak_charge_info(pulse)
     
@@ -214,13 +220,12 @@ class PulseDisplay:
             axs.set_ylabel(r'charge [1000 * $10^3$ e]', loc='bottom')
             axs.set_xlim(xmin=_range_start, xmax=_range_end)
           
-            axs_info_test = '''nbins = {}
+            axs_info_test = '''1 bin := 1 LSB increment
                                plot\_range = {}
                                rms = {} 
                                peak charge value = {}
                                peak charge value ts = {}
-                            '''.format(_nbins_lsb, 
-                                       _range_end - _range_start,
+                            '''.format(_range_end - _range_start,
                                        self.rms,
                                        self.peak_charge_value,
                                        self.peak_charge_value_time_stamp)
@@ -245,13 +250,12 @@ class PulseDisplay:
             ax2.set_ylabel(r'charge [1000 * $10^3$ e]', loc='bottom')
             ax2.set_xlim(xmin=_range_start, xmax=_range_end)
           
-            ax2_info_test = '''nbins = {}
+            ax2_info_test = '''1 bin := 1 sliding window element  
                                plot\_range = {}
                                rms = {} 
                                peak charge value = {}
                                peak charge value ts = {}
-                            '''.format(_nbins_time_slice, 
-                                       _range_end - _range_start,
+                            '''.format(_range_end - _range_start,
                                        self.rms,
                                        self.peak_charge_value,
                                        self.peak_charge_value_time_stamp)
@@ -278,13 +282,12 @@ class PulseDisplay:
             ax3.set_ylabel(r'charge [1000 * $10^3$ e]', loc='bottom')
             ax3.set_xlim(xmin=_range_start, xmax=_range_end)
           
-            ax3_info_test = '''nbins = {}
+            ax3_info_test = '''1 bin := 5 sliding window elements 
                                plot\_range = {}
                                rms = {} 
                                peak charge value = {}
                                peak charge value ts = {}
-                            '''.format(_nbins_limit_time_slice, 
-                                       _range_end - _range_start,
+                            '''.format(_range_end - _range_start,
                                        self.rms,
                                        self.peak_charge_value,
                                        self.peak_charge_value_time_stamp)

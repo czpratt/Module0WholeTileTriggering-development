@@ -2,7 +2,7 @@
     Addressing the Whole Tile Triggering problem occuring in the
     Module 0 detector at LBNL
 
-    Version 1.0.1
+    Version 1.0.2
 
     o--- Contributers ---o
      Christian Pratt: czpratt@ucdavis.edu
