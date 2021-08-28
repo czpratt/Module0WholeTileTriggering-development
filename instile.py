@@ -29,6 +29,13 @@ class Instile:
         self.peak_charge_value_list            = None
         self.peak_charge_value_time_stamp_list = None
 
+        self.max_peak_charge_value            = None  # maximum peak charge value
+        self.max_peak_charge_value_time_stamp = None  # timestamp of max peak charge
+        self.max_peak_charge_value_first_hit_index = None
+        self.max_peak_charge_value_last_hit_index  = None
+        self.max_peak_charge_value_pulse_start_time_stamp   = None
+        self.max_peak_charge_value_pulse_end_time_stamp     = None
+
         self.charges      = None   # list of charges from hits
         self.time_stamps  = None   # list of time stamps of hits
         self.npulse_count = None   # counts number of pulses on the tile
@@ -65,21 +72,43 @@ class Instile:
 
     def __repr__(self):
         ''' String representation function '''
-        return ('\n\nevid = {}, tile_id = {}, npulse_count = {}, \n\
-start times = {}, end times = {}, len(charges_list) = {}, len(time_stamps_list) = {}\n\
-first_hit_index = {}, last_hit_index = {}\npeak_charge = {}, peak_charge_ts = {}\n'.format(
-                                self.evid,
-                                self.tile_id,
-                                self.npulse_count,
-                                self.pulse_start_time_stamp,
-                                self.pulse_end_time_stamp,
-                                len(self.charges_list),
-                                len(self.time_stamps_list),
-                                self.first_hit_at_lsb_index,
-                                self.last_hit_at_lsb_index,
-                                self.peak_charge_value_list,
-                                self.peak_charge_value_time_stamp_list))
-   
+        return('''
+                   evid                       = {}
+                   tile_id                    = {}
+                   npulse_count               = {}
+                   start times                = {}
+                   end times                  = {}
+                   len(charges_list)          = {}
+                   len(time_stamps_list)      = {}
+                   first_hit_index            = {}
+                   last_hit_index             = {}
+                   peak_charges               = {}
+                   peak_charge_ts             = {}
+                   max peak charge            = {}
+                   max peak charge ts         = {}
+                   max peak first hit index   = {}
+                   max peak last hit index    = {}
+                   max peak pulse start time  = {}
+                   max peak pulse end time    = {}
+               '''.format(self.evid,
+                          self.tile_id,
+                          self.npulse_count,
+                          self.pulse_start_time_stamp,
+                          self.pulse_end_time_stamp,
+                          len(self.charges_list),
+                          len(self.time_stamps_list),
+                          self.first_hit_at_lsb_index,
+                          self.last_hit_at_lsb_index,
+                          self.peak_charge_value_list,
+                          self.peak_charge_value_time_stamp_list,
+                          self.max_peak_charge_value,
+                          self.max_peak_charge_value_time_stamp,
+                          self.max_peak_charge_value_first_hit_index,
+                          self.max_peak_charge_value_last_hit_index,
+                          self.max_peak_charge_value_pulse_start_time_stamp,
+                          self.max_peak_charge_value_pulse_end_time_stamp))
+
+
 
     def set_pulse_start_time_stamp(self,
                                    pulse_start_time):
@@ -131,6 +160,29 @@ first_hit_index = {}, last_hit_index = {}\npeak_charge = {}, peak_charge_ts = {}
                                            time_stamp):
         ''' Store peak charge value time stamp '''
         self.peak_charge_value_time_stamp_list.append(time_stamp)
+
+    def set_max_peak_charge_information(self):
+        ''' 
+            In the edge case where multiple pulses are logged,
+            this function will find the largest value and timestamp
+            ==> this will occur for each event's instile if possible
+        '''
+        _max_peak_charge_value = max(self.peak_charge_value_list)
+        _index = self.peak_charge_value_list.index(_max_peak_charge_value)
+        _max_peak_charge_value_time_stamp = self.peak_charge_value_time_stamp_list[_index]
+        
+        _max_peak_first_hit_index = self.first_hit_at_lsb_index[_index]
+        _max_peak_last_hit_index  = self.last_hit_at_lsb_index[_index]
+        
+        _max_peak_pulse_start_time_stamp = self.pulse_start_time_stamp[_index]
+        _max_peak_pulse_end_time_stamp   = self.pulse_end_time_stamp[_index]
+
+        self.max_peak_charge_value                  = _max_peak_charge_value
+        self.max_peak_charge_value_time_stamp       = _max_peak_charge_value_time_stamp
+        self.max_peak_charge_value_first_hit_index  = _max_peak_first_hit_index
+        self.max_peak_charge_value_last_hit_index   = _max_peak_last_hit_index
+        self.max_peak_charge_value_pulse_start_time_stamp = _max_peak_pulse_start_time_stamp
+        self.max_peak_charge_value_pulse_end_time_stamp   = _max_peak_pulse_end_time_stamp
 
     
     def increment_npulse_count(self):
