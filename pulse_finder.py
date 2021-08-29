@@ -243,6 +243,16 @@ class PulseFinder:
                 self.store_peak_charge_information(instile)
 
 
+    def obtain_peak_charge_information(self):
+        ''' Obtaining peak charge information at the end of pulse collection '''
+        for instile in self.complete_pulses:
+            # access instile by self.complete_pulses[instile]
+            self.complete_pulses[instile].set_max_peak_charge_information()
+
+
+
+
+
     def sync_pulse_determination(self):
         ''' Determine if pulses within an event are related to syncing '''
         if len(self.tile_pulses) > self.SYNC_PULSE_CONSTRAINT:
@@ -255,6 +265,7 @@ class PulseFinder:
             print('event {} DOES NOT contain a sync pulse'.format(self.event[0]))
             print('o-----------------------------------------o')
             self.assemble_charge_and_time_lists()
+            self.obtain_peak_charge_information()
 
 
     def obtain_event_pulses(self,
