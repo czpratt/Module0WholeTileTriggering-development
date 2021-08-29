@@ -33,6 +33,9 @@ class WholeTileTriggerDisplay:
 
         self.event_start_time_stamp = None
         self.event_end_time_stamp   = None
+    
+        self.rms_of_pulse = None
+        self.rms_of_wtt_region = None
 
 
     def set_evid(self,
@@ -85,17 +88,27 @@ class WholeTileTriggerDisplay:
         self.hit_count = 0
 
    
-    def set_rms(self,
-                instile):
+    def set_rms_of_pulse(self,
+                      instile):
         ''' Sets rms value of current pulse '''
         _pulse_start_time = instile.max_peak_charge_value_time_stamps_list[0]
 
         _normalized_time_stamps = np.array(instile.max_peak_charge_value_time_stamps_list \
                                            - _pulse_start_time)
     
-        _rms = round(np.sqrt(np.mean(_normalized_time_stamps) ** 2), 2)
+        _rms_pulse = round(np.sqrt(np.mean(_normalized_time_stamps) ** 2), 2)
 
-        self.rms = _rms
+        self.rms_of_pulse = _rms_pulse
+
+
+    def set_rms_of_wtt_region(self,
+                              time_stamps):
+        ''' Sets pulse for entire region surrounding pulse '''
+        _cut_time_stamps = sorted(list(time_stamps))
+        _normalized_time_stamps = np.array(_cut_time_stamps - _cut_time_stamps[0])
+        _rms_region = round(np.sqrt(np.mean(_normalized_time_stamps) ** 2), 2)
+
+        self.rms_of_wtt_region = _rms_region
 
 
     def obtain_nbins(self,  
@@ -132,7 +145,8 @@ class WholeTileTriggerDisplay:
         stuff_to_write = ['',
                           'Event ' + str(self.evid),
                           'Tile ' + str(self.tile_id),
-                          'rms ' + str(self.rms),
+                          'rms pulse ' + str(self.rms_of_pulse),
+                          'rms wtt region ' + str(self.rms_of_wtt_region),
                           'peak q ' + str(instile.max_peak_charge_value),
                           '']
 
@@ -150,19 +164,27 @@ class WholeTileTriggerDisplay:
         _hit_range = 100
 
         self.set_hit_count() 
-        self.set_rms(instile)
+        
+        _last_hit_index = instile.max_peak_charge_value_last_hit_index
 
-        # will eventually set a buffer here
-        while self.hit_count < instile.max_peak_charge_value_last_hit_index + _range:
+        _iter_end = _last_hit_index + _hit_range if \
+                    _last_hit_index + _hit_range < len(self.event_hits) - 1 else \
+                    len(self.event_hits) - 1
+
+        # iterate through hits and append charge/time stamps
+        while self.hit_count < _iter_end:
             _tile_id = selection.get_tile_id(self.event_hits[self.hit_count])
             if _tile_id == self.tile_id:
                 _time_stamps.append(self.event_hits[self.hit_count][3])
                 _charges.append(self.event_hits[self.hit_count][4])
             else:
+                # hit occurred at a different tile
                 pass
             
             self.hit_count += 1
 
+        self.set_rms_of_pulse(instile)
+        self.set_rms_of_wtt_region(_time_stamps)
 
         _nbins_1_lsb, _nbins_5_lsb, _nbins_25_lsb = self.obtain_nbins(_time_stamps)
         
@@ -190,11 +212,13 @@ class WholeTileTriggerDisplay:
         
         axs_info_test = '''1 bin := 1 LSB increment
                            plot\_range = {}
-                           rms = {} 
+                           rms of pulse = {}
+                           rms of WTT region = {}
                            peak charge value = {}
                            peak charge value ts = {}
                         '''.format(_range_end - _range_start,
-                                   self.rms,
+                                   self.rms_of_pulse,
+                                   self.rms_of_wtt_region,
                                    instile.max_peak_charge_value,
                                    instile.max_peak_charge_value_time_stamp)
 
@@ -221,11 +245,13 @@ class WholeTileTriggerDisplay:
         
         ax2_info_test = '''1 bin := 1 sliding window element  
                            plot\_range = {}
-                           rms = {} 
+                           rms of pulse = {}
+                           rms of WTT region = {}
                            peak charge value = {}
                            peak charge value ts = {}
                         '''.format(_range_end - _range_start,
-                                   self.rms,
+                                   self.rms_of_pulse,
+                                   self.rms_of_wtt_region,
                                    instile.max_peak_charge_value,
                                    instile.max_peak_charge_value_time_stamp)
 
@@ -255,11 +281,13 @@ class WholeTileTriggerDisplay:
         
         ax3_info_test = '''1 bin := 5 sliding window elements (25 LSBs)
                            plot\_range = {}
-                           rms = {} 
+                           rms of pulse = {}
+                           rms of WTT region = {}
                            peak charge value = {}
                            peak charge value ts = {}
                         '''.format(_range_end - _range_start,
-                                   self.rms,
+                                   self.rms_of_pulse,
+                                   self.rms_of_wtt_region,
                                    instile.max_peak_charge_value,
                                    instile.max_peak_charge_value_time_stamp)
 
@@ -286,6 +314,5 @@ class WholeTileTriggerDisplay:
             for tile_id in self.event_pulses[evid]:
                 self.set_tile_id(tile_id)
                 _instile = self.event_pulses[self.evid][self.tile_id]
-                print(len(_instile.charges_list))
                 self.plot_charge_around_pulse(selection,
                                               _instile)
