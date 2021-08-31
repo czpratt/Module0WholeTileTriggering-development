@@ -36,9 +36,3 @@ datalog_2021_04_08_14_40_33_CESTevd.h5
 datalog_2021_04_08_15_45_52_CESTevd.h5
 
 datalog_2021_04_08_16_43_54_CESTevd.h5
-
-datalog_2021_04_02_16_38_39_CESTevd.h5
-
-datalog_2021_04_02_16_38_39_CESTevd.h5
-
-datalog_2021_04_02_16_38_39_CESTevd.h5
