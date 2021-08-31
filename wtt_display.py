@@ -80,16 +80,14 @@ class WholeTileTriggerDisplay:
         self.event_end_time_stamp   = self.event_hits[-1][3]
     
 
-    def set_hit_count(self):
-        ''' 
-            Sets initial starting point for iterating through
-            the region around a pulse
-        '''
+    def reinitialize(self):
+        ''' Reinitializes necessary class variables'''
         self.hit_count = 0
+        self.ts        = 0
 
    
     def set_rms_of_pulse(self,
-                      instile):
+                         instile):
         ''' Sets rms value of current pulse '''
         _pulse_start_time = instile.max_peak_charge_value_time_stamps_list[0]
 
@@ -163,8 +161,8 @@ class WholeTileTriggerDisplay:
         _range = 250
         _hit_range = 100
 
-        self.set_hit_count() 
-        
+        self.reinitialize()
+
         _last_hit_index = instile.max_peak_charge_value_last_hit_index
 
         _iter_end = _last_hit_index + _hit_range if \
@@ -192,7 +190,7 @@ class WholeTileTriggerDisplay:
         
         _range_start, _range_end = self.obtain_peak_charge_info(instile)
 
-        self.append_wtt_info_to_text_file(instile)
+        #self.append_wtt_info_to_text_file(instile)
 
         # Plot 1: 1 LSB increment 
         fig, (axs, axs_info) = plt.subplots(1, 2)
@@ -243,7 +241,7 @@ class WholeTileTriggerDisplay:
         ax2.set_ylabel(r'charge [1000 * $10^3$ e]', loc='bottom')
         ax2.set_xlim(xmin=_range_start, xmax=_range_end)
         
-        ax2_info_test = '''1 bin := 1 sliding window element  
+        ax2_info_test = '''1 bin := 1 sliding window element (5 LSBs)
                            plot\_range = {}
                            rms of pulse = {}
                            rms of WTT region = {}
@@ -314,5 +312,7 @@ class WholeTileTriggerDisplay:
             for tile_id in self.event_pulses[evid]:
                 self.set_tile_id(tile_id)
                 _instile = self.event_pulses[self.evid][self.tile_id]
+                # plot charge around pulse 
                 self.plot_charge_around_pulse(selection,
                                               _instile)
+

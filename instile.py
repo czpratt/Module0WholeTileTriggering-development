@@ -35,6 +35,9 @@ class Instile:
         self.max_peak_charge_value_last_hit_index  = None
         self.max_peak_charge_value_pulse_start_time_stamp   = None
         self.max_peak_charge_value_pulse_end_time_stamp     = None
+        self.max_peak_charge_value_charges_list = None
+        self.max_peak_charge_value_time_stamps_list = None
+    
 
         self.charges      = None   # list of charges from hits
         self.time_stamps  = None   # list of time stamps of hits
@@ -177,14 +180,19 @@ class Instile:
         _max_peak_pulse_start_time_stamp = self.pulse_start_time_stamp[_index]
         _max_peak_pulse_end_time_stamp   = self.pulse_end_time_stamp[_index]
 
+        _max_peak_charges_list = list(self.charges_list[_index])
+        _max_peak_time_stamps_list = list(self.time_stamps_list[_index])
+
         self.max_peak_charge_value                  = _max_peak_charge_value
         self.max_peak_charge_value_time_stamp       = _max_peak_charge_value_time_stamp
         self.max_peak_charge_value_first_hit_index  = _max_peak_first_hit_index
         self.max_peak_charge_value_last_hit_index   = _max_peak_last_hit_index
         self.max_peak_charge_value_pulse_start_time_stamp = _max_peak_pulse_start_time_stamp
         self.max_peak_charge_value_pulse_end_time_stamp   = _max_peak_pulse_end_time_stamp
+        self.max_peak_charge_value_charges_list = _max_peak_charges_list
+        self.max_peak_charge_value_time_stamps_list = _max_peak_time_stamps_list
+   
 
-    
     def increment_npulse_count(self):
         ''' Increments npulse count '''
         self.npulse_count += 1
