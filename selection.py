@@ -45,7 +45,7 @@ class Selection:
             self.nhit_cut_events = {}
             self.make_nhit_cuts() 
             nhit_cut_end = time.time()
-            print('Finished nhits cut on events in {}'.format(nhit_cut_end - nhit_cut_start))
+            print('Finished nhits cut on events in {} s'.format(nhit_cut_end - nhit_cut_start))
         else:
             pass
 

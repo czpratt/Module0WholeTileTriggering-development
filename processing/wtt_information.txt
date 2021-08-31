@@ -1,0 +1,660 @@
+
+datalog_2021_04_02_00_11_16_CESTevd.h5
+
+Event 1244
+Tile 8
+rms pulse 30.45
+rms wtt region 957.64
+peak q 96993.73941107526
+
+Event 1734
+Tile 5
+rms pulse 180.09
+rms wtt region 354.02
+peak q 18801.922595854176
+
+Event 1734
+Tile 3
+rms pulse 341.04
+rms wtt region 106.84
+peak q 99405.02622649971
+
+Event 1734
+Tile 8
+rms pulse 50.67
+rms wtt region 110.13
+peak q 39132.4411566523
+
+Event 1734
+Tile 6
+rms pulse 33.65
+rms wtt region 131.39
+peak q 78617.55836965787
+
+Event 1734
+Tile 1
+rms pulse 341.47
+rms wtt region 195.04
+peak q 65026.82244203524
+
+Event 3565
+Tile 1
+rms pulse 28.28
+rms wtt region 2012.7
+peak q 59864.0747646466
+
+datalog_2021_04_02_16_38_39_CESTevd.h5
+
+Event 2570
+Tile 7
+rms pulse 27.09
+rms wtt region 1025.7
+peak q 82266.75189328258
+
+Event 2570
+Tile 12
+rms pulse 29.59
+rms wtt region 940.27
+peak q 76770.03580714705
+
+Event 5353
+Tile 8
+rms pulse 25.05
+rms wtt region 1034.6
+peak q 56276.53092293346
+
+Event 8947
+Tile 6
+rms pulse 25.08
+rms wtt region 417.49
+peak q 60557.055101307255
+
+Event 12224
+Tile 2
+rms pulse 28.33
+rms wtt region 268.26
+peak q 57000.65612571565
+
+Event 13122
+Tile 8
+rms pulse 25.14
+rms wtt region 218.5
+peak q 71782.63041450581
+
+Event 52125
+Tile 8
+rms pulse 30.74
+rms wtt region 1200.62
+peak q 64123.88177834957
+
+Event 77241
+Tile 2
+rms pulse 28.77
+rms wtt region 538.89
+peak q 66334.19359253284
+
+Event 79817
+Tile 16
+rms pulse 31.57
+rms wtt region 573.36
+peak q 269.91523493065426
+
+Event 79817
+Tile 14
+rms pulse 27.71
+rms wtt region 696.99
+peak q 99556.69817630743
+
+Event 80839
+Tile 4
+rms pulse 31.85
+rms wtt region 772.0
+peak q 50820.22263984364
+
+datalog_2021_04_02_00_21_31_CESTevd.h5
+
+Event 23737
+Tile 6
+rms pulse 41.66
+rms wtt region 2348.06
+peak q 79316.64005576138
+
+Event 23737
+Tile 5
+rms pulse 29.05
+rms wtt region 3577.45
+peak q 64274.79876317986
+
+datalog_2021_04_01_22_07_34_CESTevd.h5
+
+Event 2506
+Tile 4
+rms pulse 29.94
+rms wtt region 698.35
+peak q 106179.31915050636
+
+Event 5976
+Tile 9
+rms pulse 31.66
+rms wtt region 2593.93
+peak q 74796.72411424993
+
+datalog_2021_04_08_18_42_39_CESTevd.h5
+
+Event 35899
+Tile 10
+rms pulse 33.33
+rms wtt region 1014.65
+peak q 75954.8827886584
+
+datalog_2021_04_02_09_37_56_CESTevd.h5
+
+Event 14722
+Tile 4
+rms pulse 35.05
+rms wtt region 666.61
+peak q 89146.78632651985
+
+Event 15955
+Tile 16
+rms pulse 26.96
+rms wtt region 506.72
+peak q 64653.726120231695
+
+Event 16020
+Tile 16
+rms pulse 25.55
+rms wtt region 340.79
+peak q 39568.08207386221
+
+Event 25386
+Tile 14
+rms pulse 32.97
+rms wtt region 457.46
+peak q 25716.249522237005
+
+Event 30585
+Tile 6
+rms pulse 26.74
+rms wtt region 646.41
+peak q 62562.226872607265
+
+Event 33144
+Tile 3
+rms pulse 29.88
+rms wtt region 1311.49
+peak q 81616.6822497541
+
+Event 33144
+Tile 5
+rms pulse 32.65
+rms wtt region 1196.69
+peak q 87075.85753659373
+
+Event 42401
+Tile 8
+rms pulse 28.79
+rms wtt region 871.43
+peak q 98783.25809209746
+
+Event 42401
+Tile 6
+rms pulse 26.86
+rms wtt region 405.41
+peak q 52387.79965567985
+
+Event 63637
+Tile 1
+rms pulse 26.32
+rms wtt region 1402.19
+peak q 50741.29782177938
+
+Event 74319
+Tile 3
+rms pulse 30.67
+rms wtt region 806.06
+peak q 91395.34590058759
+
+Event 75455
+Tile 10
+rms pulse 29.55
+rms wtt region 632.01
+peak q 66129.8963765425
+
+datalog_2021_04_02_11_58_10_CESTevd.h5
+
+Event 42913
+Tile 2
+rms pulse 34.85
+rms wtt region 667.93
+peak q 52146.6756402911
+
+Event 45021
+Tile 10
+rms pulse 30.81
+rms wtt region 300.95
+peak q 56875.15897505086
+
+Event 73730
+Tile 16
+rms pulse 31.44
+rms wtt region 980.91
+peak q 60190.32127041338
+
+Event 81793
+Tile 3
+rms pulse 26.98
+rms wtt region 377.2
+peak q 64596.28251632045
+
+datalog_2021_04_02_12_38_14_CESTevd.h5
+
+Event 27197
+Tile 4
+rms pulse 29.45
+rms wtt region 783.81
+peak q 79010.82949678216
+
+Event 31994
+Tile 1
+rms pulse 20.41
+rms wtt region 268.69
+peak q 69754.49575026479
+
+Event 45913
+Tile 10
+rms pulse 30.02
+rms wtt region 748.16
+peak q 61937.46221933096
+
+Event 46781
+Tile 4
+rms pulse 26.16
+rms wtt region 155.99
+peak q 52982.70743949584
+
+Event 46781
+Tile 5
+rms pulse 24.7
+rms wtt region 472.86
+peak q 59607.63248617523
+
+Event 59625
+Tile 2
+rms pulse 34.09
+rms wtt region 614.55
+peak q 55971.24283247635
+
+Event 59625
+Tile 1
+rms pulse 20.11
+rms wtt region 529.41
+peak q 37231.04884702073
+
+Event 59625
+Tile 10
+rms pulse 23.29
+rms wtt region 1514.63
+peak q 35331.830599595734
+
+Event 59659
+Tile 2
+rms pulse 32.01
+rms wtt region 509.2
+peak q 29712.654519279557
+
+Event 59659
+Tile 1
+rms pulse 21.94
+rms wtt region 656.09
+peak q 27462.630482046057
+
+Event 59659
+Tile 10
+rms pulse 13.87
+rms wtt region 1528.33
+peak q 12108.52094830742
+
+Event 68695
+Tile 8
+rms pulse 27.16
+rms wtt region 182.69
+peak q 40127.406011471525
+
+Event 68695
+Tile 6
+rms pulse 23.71
+rms wtt region 278.06
+peak q 47891.064714199885
+
+Event 68747
+Tile 8
+rms pulse 32.56
+rms wtt region 220.08
+peak q 49271.11763549557
+
+Event 68747
+Tile 6
+rms pulse 24.56
+rms wtt region 301.2
+peak q 38354.67708869115
+
+Event 73744
+Tile 12
+rms pulse 29.92
+rms wtt region 1551.35
+peak q 101978.88418104567
+
+Event 79614
+Tile 2
+rms pulse 33.84
+rms wtt region 87.33
+peak q 41745.66484468802
+
+Event 79614
+Tile 4
+rms pulse 27.32
+rms wtt region 103.26
+peak q 4806.399472435539
+
+datalog_2021_04_02_10_18_00_CESTevd.h5
+
+Event 12278
+Tile 1
+rms pulse 37.87
+rms wtt region 654.98
+peak q 91324.43568870227
+
+Event 12278
+Tile 3
+rms pulse 30.61
+rms wtt region 925.85
+peak q 62154.39217713854
+
+Event 14125
+Tile 9
+rms pulse 28.15
+rms wtt region 651.44
+peak q 79754.98868511924
+
+Event 17670
+Tile 3
+rms pulse 28.35
+rms wtt region 358.81
+peak q 103949.27147873858
+
+Event 17757
+Tile 4
+rms pulse 23.98
+rms wtt region 340.19
+peak q 82088.53020979543
+
+Event 55466
+Tile 1
+rms pulse 16.8
+rms wtt region 235.99
+peak q 10844.661241594973
+
+datalog_2021_04_03_04_13_06_CESTevd.h5
+
+Event 24419
+Tile 8
+rms pulse 27.56
+rms wtt region 360.64
+peak q 62978.49801144064
+
+Event 24481
+Tile 12
+rms pulse 26.64
+rms wtt region 2403.96
+peak q 91828.03931388618
+
+Event 24481
+Tile 1
+rms pulse 39.38
+rms wtt region 2692.16
+peak q 97951.62871823179
+
+Event 24481
+Tile 10
+rms pulse 23.23
+rms wtt region 832.15
+peak q 34410.211952641606
+
+Event 32867
+Tile 5
+rms pulse 30.35
+rms wtt region 792.95
+peak q 94548.57394498835
+
+Event 40913
+Tile 16
+rms pulse 33.08
+rms wtt region 269.54
+peak q 104619.39230861152
+
+datalog_2021_04_03_21_23_23_CESTevd.h5
+
+Event 8050
+Tile 5
+rms pulse 35.38
+rms wtt region 531.6
+peak q 67756.89850874332
+
+Event 8050
+Tile 6
+rms pulse 27.8
+rms wtt region 823.01
+peak q 66200.8931918132
+
+Event 18438
+Tile 8
+rms pulse 31.36
+rms wtt region 334.01
+peak q 90073.06773396082
+
+Event 35753
+Tile 4
+rms pulse 36.2
+rms wtt region 581.47
+peak q 107080.54594001401
+
+Event 35753
+Tile 5
+rms pulse 29.45
+rms wtt region 912.74
+peak q 89724.62546396983
+
+Event 37952
+Tile 2
+rms pulse 26.28
+rms wtt region 267.3
+peak q 94967.59497666176
+
+Event 37952
+Tile 1
+rms pulse 23.05
+rms wtt region 447.09
+peak q 40250.95434906739
+
+Event 47403
+Tile 5
+rms pulse 25.11
+rms wtt region 1014.18
+peak q 41542.805289748125
+
+Event 60999
+Tile 3
+rms pulse 29.29
+rms wtt region 891.19
+peak q 87514.51253647514
+
+Event 64986
+Tile 3
+rms pulse 28.54
+rms wtt region 1023.4
+peak q 40080.26623449358
+
+Event 67010
+Tile 4
+rms pulse 28.25
+rms wtt region 2499.94
+peak q 56086.07153475759
+
+datalog_2021_04_08_14_40_33_CESTevd.h5
+
+Event 833
+Tile 5
+rms pulse 35.91
+rms wtt region 897.37
+peak q 108127.876740222
+
+Event 833
+Tile 4
+rms pulse 31.77
+rms wtt region 669.5
+peak q 95820.88939782919
+
+Event 2268
+Tile 4
+rms pulse 36.79
+rms wtt region 286.81
+peak q 97952.9007450422
+
+Event 14392
+Tile 8
+rms pulse 27.49
+rms wtt region 529.39
+peak q 39675.661675580326
+
+Event 15319
+Tile 4
+rms pulse 30.04
+rms wtt region 359.98
+peak q 77191.73276798041
+
+Event 34090
+Tile 4
+rms pulse 31.97
+rms wtt region 215.41
+peak q 88971.08007488103
+
+Event 39669
+Tile 5
+rms pulse 24.93
+rms wtt region 370.64
+peak q 38611.04715893104
+
+Event 64019
+Tile 16
+rms pulse 41.72
+rms wtt region 323.81
+peak q 102805.09038576027
+
+Event 68030
+Tile 1
+rms pulse 22.88
+rms wtt region 746.25
+peak q 59545.853891088256
+
+Event 68218
+Tile 9
+rms pulse 28.98
+rms wtt region 737.85
+peak q 75959.99118806112
+
+Event 68450
+Tile 1
+rms pulse 26.19
+rms wtt region 1027.84
+peak q 64252.96489823957
+
+Event 72220
+Tile 13
+rms pulse 40.66
+rms wtt region 535.92
+peak q 58026.58095483882
+
+Event 73682
+Tile 7
+rms pulse 29.54
+rms wtt region 373.27
+peak q 53248.875667787346
+
+datalog_2021_04_08_15_45_52_CESTevd.h5
+
+datalog_2021_04_08_16_43_54_CESTevd.h5
+
+Event 1090
+Tile 2
+rms pulse 32.0
+rms wtt region 732.3
+peak q 74908.36765560028
+
+Event 2361
+Tile 8
+rms pulse 25.57
+rms wtt region 186.83
+peak q 76786.5036197198
+
+Event 2361
+Tile 5
+rms pulse 33.56
+rms wtt region 283.75
+peak q 64379.6609995649
+
+Event 2361
+Tile 6
+rms pulse 17.08
+rms wtt region 235.57
+peak q 19697.347731019636
+
+Event 5525
+Tile 5
+rms pulse 26.45
+rms wtt region 344.51
+peak q 75827.4459374768
+
+Event 5525
+Tile 12
+rms pulse 27.02
+rms wtt region 1164.31
+peak q 73507.19421920106
+
+Event 13083
+Tile 16
+rms pulse 33.48
+rms wtt region 297.16
+peak q 104746.5714085375
+
+Event 18242
+Tile 12
+rms pulse 35.97
+rms wtt region 687.77
+peak q 137576.43870597353
+
+Event 48211
+Tile 1
+rms pulse 25.64
+rms wtt region 675.27
+peak q 87467.07933160564
+
+Event 68356
+Tile 3
+rms pulse 29.09
+rms wtt region 510.54
+peak q 94871.4201821772
+
+Event 68356
+Tile 1
+rms pulse 27.97
+rms wtt region 975.74
+peak q 53322.868407516245
+
+=================== *************************************** ==================================
+
+datalog_2021_04_02_16_38_39_CESTevd.h5
+
+datalog_2021_04_02_16_38_39_CESTevd.h5
+
+datalog_2021_04_02_16_38_39_CESTevd.h5
