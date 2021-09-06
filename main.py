@@ -2,13 +2,13 @@
     Addressing the Whole Tile Triggering problem occuring in the
     Module 0 detector at LBNL
 
-    Version 1.1.0
+    Version 1.0.4
 
-    o--- Contributers ---o
-     Christian Pratt: czpratt@ucdavis.edu
-     Nicholas Carrara: ncarrara.physics@gmail.com
-     Jacob Steenis: jhsteenis@ucdavis.edu
-    o--------------------o
+    o---------------- Contributers  ----------------o
+    | Christian Pratt:  czpratt@ucdavis.edu         |
+    | Nicholas Carrara: ncarrara.physics@gmail.com  |
+    | Jacob Steenis:    jhsteenis@ucdavis.edu       |
+    o-----------------------------------------------o
 '''
 
 import h5py as h
@@ -25,10 +25,10 @@ from collections import deque
 from dataclasses import dataclass
 
 from tile_plot import *
-from display_pulses import *
 from selection import Selection
 from pulse_finder import PulseFinder
 from configuration import Configuration
+from wtt_display import WholeTileTriggerDisplay
 
 matplotlib.rcParams['text.usetex'] = True
 
@@ -73,11 +73,13 @@ if __name__ == '__main__':
         print(selection)
     
     ''' Obtain pulses from nhit cut events '''
+
     n                = 16
     time_step        = 1
     delta_time_slice = 5
-    q_thresh         = float(20000)
+    q_thresh         = float(50000)
     max_q_window_len = delta_time_slice
+
 
     pulse_finder = PulseFinder(n,
                                time_step,
@@ -89,10 +91,17 @@ if __name__ == '__main__':
 
     print('event_pulses: {}'.format(event_pulses))
     
-    ''' Display pulse information '''
+    ''' Display pulse (WTT) information '''
     if args.display_pulses:
-        display(selection,
-                event_pulses,
-                q_thresh,
-                delta_time_slice)
+        pulse_data_file = ['', args.datalog_file, '']
+        with open('wtt_information.txt', 'a') as f:
+            f.writelines('\n'.join(pulse_data_file))
         
+        with open('datalog_files_processed.txt', 'a') as f:
+            f.writelines('\n'.join(pulse_data_file))
+        
+        wtt_display = WholeTileTriggerDisplay(event_pulses,
+                                              q_thresh,
+                                              delta_time_slice)
+
+        wtt_display.display_wtt_events(selection)
