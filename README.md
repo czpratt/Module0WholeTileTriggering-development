@@ -84,6 +84,8 @@ This will be useful when plotting utility functions are utilized in the post-pro
 - `wtt_display`: Post-processing plotting utilities for pulses (class based) 
 Be sure to include `--display_pulses` at the command line to activate the plotting of a histogram.
 
+- `post_processing.py`: Post processing utility for displaying macro-level trends
+
 - `tile_plot.py`: Plotting functionality
 
 - `main.py`: Main driver function 
