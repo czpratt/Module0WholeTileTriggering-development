@@ -40,10 +40,13 @@ class PulseFinder:
         self.event_end_time   = None   # event end time
         self.max_time_step    = None   # maximum attainable time slice
        
-        self.peak_charge_value    = None    # value of peak charge within fifo sliding window
-        self.peak_charge_value_ts = None    # time stamp of fifo sliding window peak charge
+        self.peak_charge_value    = None    # value of peak charge for sliding window element
+        self.peak_charge_value_ts = None    # time stamp of fifo sliding window peak charge element
 
-        self.complete_pulses  = None   # complete pulse
+        self.sliding_window_max_charge_value    = None # overall peak charge for sliding window
+        self.sliding_window_max_charge_value_ts = None # timestamps that it occurs
+
+        self.complete_pulses  = None   # complete pulse log
         self.tile_pulses      = None   # keeps track of npulses on a tile
         self.event_pulses     = {}     # stores all event pulses in datalog file
 
@@ -92,14 +95,17 @@ class PulseFinder:
 
         self.peak_charge_value            = 0
         self.peak_charge_value_time_stamp = 0
+        
+        self.sliding_window_max_charge_value    = 0
+        self.sliding_window_max_charge_value_ts = 0
 
 
     def append_charge_and_time(self,
                                tile_id,
-                               time_stamp,
+                               time_stamps,
                                charge):
         ''' Appending instile charge and timestamp lists post processing '''
-        self.instile_dict[tile_id].time_stamps.append(time_stamp)
+        self.instile_dict[tile_id].time_stamps.append(time_stamps)
         self.instile_dict[tile_id].charges.append(charge)
 
 
@@ -126,7 +132,7 @@ class PulseFinder:
                      
                     if _ts == self.event_hits[_hit_index][3]:
                         # a match, 
-                        # append charge and associated time stamp to instile deque
+                        # append charge and associated time stamp to instile by charge/LSB
                         self.append_charge_and_time(tile_id,
                                                     _ts,
                                                     abs(self.event_hits[_hit_index][4]))
@@ -182,9 +188,12 @@ class PulseFinder:
         ''' Manages the storage of peak charge information '''
         self.instile_dict[instile_id].store_peak_charge_value(self.peak_charge_value)
         self.instile_dict[instile_id].store_peak_charge_value_time_stamp(self.peak_charge_value_time_stamp)
+
+        self.instile_dict[instile_id].store_max_sliding_window_charge_value(self.sliding_window_max_charge_value)
+        self.instile_dict[instile_id].store_max_sliding_window_charge_value_ts(self.sliding_window_max_charge_value_ts)
+
         self.peak_charge_value = 0
         self.peak_charge_time_stamp = 0
-
 
 
     def make_pulse_determination(self):
@@ -203,13 +212,16 @@ class PulseFinder:
             else:
                 pass
 
-
-            self.manage_sliding_charge_window(instile, 
-                                              _sum_window)
+            self.manage_sliding_charge_window(instile, _sum_window)
             
             # use the sum of charge FIFO stack to determine if pulse occurred
             _sum_sliding_charge_window = sum(self.instile_dict[instile].sliding_charge_window)
             
+            if _sum_sliding_charge_window > self.sliding_window_max_charge_value:
+                self.sliding_window_max_charge_value = _sum_sliding_charge_window
+                self.sliding_window_max_charge_value_ts = self.ts - self.delta_time_slice
+            else:
+                pass
 
             # check if the beginning of a pulse was found
             if self.q_thresh < _sum_sliding_charge_window and _start_indicator == False:
@@ -222,13 +234,11 @@ class PulseFinder:
                 
                 # add incremented npulse count back to instile
                 self.tile_pulses[instile] = self.instile_dict[instile].get_npulse_count()
-
             
             # check if a pulse is continuing
             elif self.q_thresh < _sum_sliding_charge_window and _start_indicator == True:
                 # do nothing for the continuation of a pulse
                 pass
-
 
             # check if the end of a pulse was found
             elif self.q_thresh > _sum_sliding_charge_window and _start_indicator == True:
@@ -248,9 +258,6 @@ class PulseFinder:
         for instile in self.complete_pulses:
             # access instile by self.complete_pulses[instile]
             self.complete_pulses[instile].set_max_peak_charge_information()
-
-
-
 
 
     def sync_pulse_determination(self):
