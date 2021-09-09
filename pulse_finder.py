@@ -93,12 +93,6 @@ class PulseFinder:
         self.tile_pulses     = {}
         self.complete_pulses = {}
 
-        self.peak_charge_value            = 0
-        self.peak_charge_value_time_stamp = 0
-        
-        self.sliding_window_max_charge_value    = 0
-        self.sliding_window_max_charge_value_ts = 0
-
 
     def append_charge_and_time(self,
                                tile_id,
@@ -186,14 +180,10 @@ class PulseFinder:
     def store_peak_charge_information(self,
                                       instile_id):
         ''' Manages the storage of peak charge information '''
-        self.instile_dict[instile_id].store_peak_charge_value(self.peak_charge_value)
-        self.instile_dict[instile_id].store_peak_charge_value_time_stamp(self.peak_charge_value_time_stamp)
-
-        self.instile_dict[instile_id].store_max_sliding_window_charge_value(self.sliding_window_max_charge_value)
-        self.instile_dict[instile_id].store_max_sliding_window_charge_value_ts(self.sliding_window_max_charge_value_ts)
-
-        self.peak_charge_value = 0
-        self.peak_charge_time_stamp = 0
+        self.instile_dict[instile_id].store_peak_charge_value()
+        self.instile_dict[instile_id].store_peak_charge_value_time_stamp()
+        self.instile_dict[instile_id].store_sliding_window_charge_value()
+        self.instile_dict[instile_id].store_sliding_window_charge_value_ts()
 
 
     def make_pulse_determination(self):
@@ -206,9 +196,10 @@ class PulseFinder:
             _sum_window = sum(self.instile_dict[instile].window)
             _start_indicator = self.instile_dict[instile].pulse_indicator
 
-            if _sum_window > self.peak_charge_value:
-                self.peak_charge_value = _sum_window
-                self.peak_charge_value_time_stamp = self.ts - self.delta_time_slice
+            if _sum_window > self.instile_dict[instile].intermediate_max_charge:
+                self.instile_dict[instile].store_intermediate_max_charge(_sum_window)
+                _inter_ts = self.ts - self.delta_time_slice
+                self.instile_dict[instile].store_intermediate_max_charge_ts(_inter_ts)
             else:
                 pass
 
@@ -216,12 +207,14 @@ class PulseFinder:
             
             # use the sum of charge FIFO stack to determine if pulse occurred
             _sum_sliding_charge_window = sum(self.instile_dict[instile].sliding_charge_window)
-            
-            if _sum_sliding_charge_window > self.sliding_window_max_charge_value:
-                self.sliding_window_max_charge_value = _sum_sliding_charge_window
-                self.sliding_window_max_charge_value_ts = self.ts - self.delta_time_slice
+           
+            if _sum_sliding_charge_window > self.instile_dict[instile].intermediate_max_sliding_window_charge:
+                self.instile_dict[instile].store_intermediate_max_sliding_window_charge(_sum_sliding_charge_window)
+                _inter_ts = self.ts - self.delta_time_slice
+                self.instile_dict[instile].store_intermediate_max_sliding_window_charge_ts(_inter_ts)
             else:
                 pass
+
 
             # check if the beginning of a pulse was found
             if self.q_thresh < _sum_sliding_charge_window and _start_indicator == False:
