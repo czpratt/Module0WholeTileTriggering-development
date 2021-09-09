@@ -224,7 +224,6 @@ class WholeTileTriggerDisplay:
         while _ts < _ts_hit_end:
             _tile_id = selection.get_tile_id(self.event_hits[_hit_count])
            
-            print('{}, {}'.format(_hit_count, len(self.event_hits)))
             # check if there's a time match
             if _ts == self.event_hits[_hit_count][3]:
 
@@ -305,7 +304,7 @@ class WholeTileTriggerDisplay:
                           'rms wtt region 25 lsb ' + str(self.rms_of_wtt_region_25_lsb),
                           'peak q 1 lsb ' + str(self.peak_charge_value_one_lsb),
                           'peak q 5 lsb ' + str(instile.max_peak_charge_value),
-                          'peak q 25 lsb ' + str(instile.sliding_window_max_charge_value),
+                          'peak q 25 lsb ' + str(instile.max_sliding_window_charge_value),
                           '']
 
         with open('wtt_information.txt', 'a') as f:
@@ -377,16 +376,16 @@ class WholeTileTriggerDisplay:
         axs.set_xlim(xmin=_range_start, xmax=_range_end)
         
         axs_info_test = '''1 bin := 1 LSB increment
-                           plot\_range = {}
-                           rms of pulse = {}
-                           rms of WTT region = {}
-                           peak charge value = {}
+                           plot\_range          = {}
+                           peak charge value    = {}
                            peak charge value ts = {}
+                           rms of pulse         = {}
+                           rms of WTT region    = {}
                         '''.format(_range_end - _range_start,
+                                   round(self.peak_charge_value_one_lsb, 2),
+                                   instile.max_peak_charge_value_time_stamp,
                                    self.rms_of_pulse_one_lsb,
-                                   self.rms_of_wtt_region_one_lsb,
-                                   self.peak_charge_value_one_lsb,
-                                   instile.max_peak_charge_value_time_stamp)
+                                   self.rms_of_wtt_region_one_lsb)
 
         axs_info.text(0.1, 0.60, axs_info_test, transform=axs_info.transAxes, fontsize=11, 
                       verticalalignment='top')
@@ -410,16 +409,16 @@ class WholeTileTriggerDisplay:
         ax2.set_xlim(xmin=_range_start, xmax=_range_end)
         
         ax2_info_test = '''1 bin := 1 sliding window element (5 LSBs)
-                           plot\_range = {}
-                           rms of pulse = {}
-                           rms of WTT region = {}
-                           peak charge value = {}
+                           plot\_range          = {}
+                           peak charge value    = {}
                            peak charge value ts = {}
+                           rms of pulse         = {}
+                           rms of WTT region    = {}
                         '''.format(_range_end - _range_start,
-                                   self.rms_of_pulse_5_lsb,
-                                   self.rms_of_wtt_region_5_lsb,
                                    round(instile.max_peak_charge_value, 2),
-                                   instile.max_peak_charge_value_time_stamp)
+                                   instile.max_peak_charge_value_time_stamp,
+                                   self.rms_of_pulse_5_lsb,
+                                   self.rms_of_wtt_region_5_lsb)
 
         ax2_info.text(0.1, 0.60, ax2_info_test, transform=ax2_info.transAxes, fontsize=11, 
                       verticalalignment='top')
@@ -446,16 +445,16 @@ class WholeTileTriggerDisplay:
         ax3.set_xlim(xmin=_range_start, xmax=_range_end)
         
         ax3_info_test = '''1 bin := 5 sliding window elements (25 LSBs)
-                           plot\_range = {}
-                           rms of pulse = {}
-                           rms of WTT region = {}
-                           peak charge value = {}
+                           plot\_range          = {}
+                           peak charge value    = {}
                            peak charge value ts = {}
+                           rms of pulse         = {}
+                           rms of WTT region    = {}
                         '''.format(_range_end - _range_start,
+                                   round(instile.max_sliding_window_charge_value, 2),
+                                   instile.max_peak_charge_value_time_stamp,
                                    self.rms_of_pulse_25_lsb,
-                                   self.rms_of_wtt_region_25_lsb,
-                                   round(instile.sliding_window_max_charge_value, 2),
-                                   instile.max_peak_charge_value_time_stamp)
+                                   self.rms_of_wtt_region_25_lsb)
 
         ax3_info.text(0.1, 0.60, ax3_info_test, transform=ax3_info.transAxes, fontsize=11, 
                       verticalalignment='top')

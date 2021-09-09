@@ -84,7 +84,7 @@ def driver():
     wtt_list = [1 for i in range(len(rms_pulse_1_list))]
     
     print('number of wtt events: {}'.format(len(wtt_list)))
-    nbins = 5
+    nbins = 10
     
     # Plot 1: Pulses by 1 LSBs
     fig, axs = plt.subplots()

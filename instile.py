@@ -38,9 +38,6 @@ class Instile:
         self.max_peak_charge_value_charges_list     = None
         self.max_peak_charge_value_time_stamps_list = None
 
-        self.sliding_window_max_charge_value    = None
-        self.sliding_window_max_charge_value_ts = None
-
         self.charges      = None   # list of charges from hits
         self.time_stamps  = None   # list of time stamps of hits
         self.npulse_count = None   # counts number of pulses on the tile
@@ -50,6 +47,17 @@ class Instile:
 
         self.first_hit_at_lsb_index = None  # index of the first hit occuring at the LSB
         self.last_hit_at_lsb_index  = None  # index of last hit occuring at LSB
+
+        self.intermediate_max_charge    = 0
+        self.intermediate_max_charge_ts = 0
+        self.intermediate_max_sliding_window_charge    = 0
+        self.intermediate_max_sliding_window_charge_ts = 0
+        
+        self.sliding_window_charge_value_list     = None
+        self.sliding_window_charge_value_ts_list = None
+        
+        self.max_sliding_window_charge_value    = None 
+        self.max_sliding_window_charge_value_ts = None
 
         self.startup()
     
@@ -73,7 +81,10 @@ class Instile:
 
         self.peak_charge_value_list = []
         self.peak_charge_value_time_stamp_list = []
-
+        
+        self.sliding_window_charge_value_list = []
+        self.sliding_window_charge_value_ts_list = []
+        
 
     def __repr__(self):
         ''' String representation function '''
@@ -113,9 +124,8 @@ class Instile:
                           self.max_peak_charge_value_last_hit_index,
                           self.max_peak_charge_value_pulse_start_time_stamp,
                           self.max_peak_charge_value_pulse_end_time_stamp,
-                          self.sliding_window_max_charge_value,
-                          self.sliding_window_max_charge_value_ts))
-
+                          self.max_sliding_window_charge_value,
+                          self.max_sliding_window_charge_value_ts))
 
 
     def set_pulse_start_time_stamp(self,
@@ -158,28 +168,50 @@ class Instile:
         self.time_stamps_list.append(self.time_stamps)
    
     
-    def store_peak_charge_value(self,
-                                charge_value):
+    def store_peak_charge_value(self):
         ''' Store peak charge value of a pulse '''
-        self.peak_charge_value_list.append(charge_value)
+        self.peak_charge_value_list.append(self.intermediate_max_charge)
+        self.intermediate_max_charge = 0
 
 
-    def store_peak_charge_value_time_stamp(self,
-                                           time_stamp):
+    def store_peak_charge_value_time_stamp(self):
         ''' Store peak charge value time stamp '''
-        self.peak_charge_value_time_stamp_list.append(time_stamp)
+        self.peak_charge_value_time_stamp_list.append(self.intermediate_max_charge_ts)
+        self.intermediate_max_charge_ts = 0
 
 
-    def store_max_sliding_window_charge_value(self,
-                                              sliding_window_charge):
+    def store_sliding_window_charge_value(self):
         ''' Stores max sliding window charge within a pulse '''
-        self.sliding_window_max_charge_value = round(sliding_window_charge, 2)
+        self.sliding_window_charge_value_list.append(self.intermediate_max_sliding_window_charge)
+        self.intermediate_max_sliding_window_charge = 0
 
 
-    def store_max_sliding_window_charge_value_ts(self,
-                                                 sliding_window_charge_ts):
+    def store_sliding_window_charge_value_ts(self):
         ''' Stores max sliding window charge within a pulse '''
-        self.sliding_window_max_charge_value_ts = sliding_window_charge_ts
+        self.sliding_window_charge_value_ts_list.append(self.intermediate_max_sliding_window_charge_ts)
+        self.intermediate_max_sliding_window_charge_ts = 0
+
+
+    def store_intermediate_max_charge(self,
+                                      charge):
+        ''' Stores intermediate max charge '''
+        self.intermediate_max_charge = charge
+
+
+    def store_intermediate_max_charge_ts(self,  
+                                         time_stamp):
+        ''' Stores intermediate max charge timestamp'''
+        self.intermediate_max_charge_ts = time_stamp
+
+
+    def store_intermediate_max_sliding_window_charge(self,
+                                                     charge):
+        self.intermediate_max_sliding_window_charge = charge
+
+    
+    def store_intermediate_max_sliding_window_charge_ts(self,
+                                                        time_stamp):
+        self.intermediate_max_sliding_window_charge_ts = time_stamp
 
 
     def set_max_peak_charge_information(self):
@@ -210,7 +242,11 @@ class Instile:
         self.max_peak_charge_value_pulse_end_time_stamp   = _max_peak_pulse_end_time_stamp
         self.max_peak_charge_value_charges_list = _max_peak_charges_list
         self.max_peak_charge_value_time_stamps_list = _max_peak_time_stamps_list
-   
+ 
+        self.max_sliding_window_charge_value    = max(self.sliding_window_charge_value_list)
+        _index = self.sliding_window_charge_value_list.index(self.max_sliding_window_charge_value)
+        self.max_sliding_window_charge_value_ts = self.sliding_window_charge_value_ts_list[_index]
+
 
     def increment_npulse_count(self):
         ''' Increments npulse count '''
